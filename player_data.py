@@ -4,6 +4,4 @@ player = {
     'ySpeed':0,
     'xCenter':0,
     'yCenter':0,
-    
-
 }
