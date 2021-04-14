@@ -1,11 +1,11 @@
 from cmu_112_graphics import *
-import math
+import math, time
 
 def appStarted(app):
     app.cx = app.width/2
     app.cy = app.height/2
     app.r = 40
-    app.move = 2
+    app.move = 4
     app.edgeX = set()
     app.edgeY = set()
 
@@ -17,12 +17,20 @@ def updateEdge(app):
         app.edgeY.add(int(app.cy + app.r*math.sin(angle/(2*math.pi))))
     print(app.edgeX, app.edgeY)
 
+
+
+def collide(app):
+    for move in [x / 5.0 for x in range(50, 5, -1)]:
+        app.cy -= move
+        time.sleep(10)
+
 def timerFired(app):
-    app.cx += app.move
+    app.cy += app.move
     if (app.width in app.edgeX or app.height in app.edgeY or
                                     0 in app.edgeX or 0 in app.edgeY):
-        app.move *= -1
-        app.cx -= 20
+        # app.move *= -1
+        collide(app)
+        app.move = 0
     updateEdge(app)
 
 def redrawAll(app, canvas):
