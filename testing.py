@@ -5,7 +5,7 @@ def appStarted(app):
     app.cx = app.width/2
     app.cy = app.height/2
     app.r = 40
-    app.move = 1
+    app.move = 2
     app.mph = app.move * 1.6440444056709e-07
     app.edgeX = set()
     app.edgeY = set()
@@ -25,10 +25,11 @@ def updateEdge(app):
 
 def collide(app):
     if app.colliding:
-        steps = [x / 7.0 for x in range(20, 0, -1)]
-        steps += (x / 40.0 for x in range(20, 0, -1))
-        print(steps)
-        app.cy -= steps[app.moveIncr]
+        maxBounce = int(app.move*10)
+        steps = [x / 9.0 for x in range(maxBounce, 0, -1)]
+        steps += (x / 40.0 for x in range(2*maxBounce, 0, -1))
+        steps.sort(reverse = True)
+        app.cx -= steps[app.moveIncr]
         if app.moveIncr < len(steps)-1:
             app.moveIncr += 1
         else:
@@ -36,7 +37,7 @@ def collide(app):
 
 def timerFired(app):
     if not app.colliding:
-        app.cy += app.move
+        app.cx += app.move
     if (app.width in app.edgeX or app.height in app.edgeY or
                                     0 in app.edgeX or 0 in app.edgeY):
         app.colliding = True

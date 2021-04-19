@@ -9,15 +9,17 @@ def appStarted(app):
     app.xr = 40
     app.yr = 20
     app.angle = 0
-    app.move = 0.5
+    app.move = 0.25
     app.xMomentum = 0
     app.yMomentum = 0
     app.edgeX = set()
     app.edgeY = set()
     app.moveIncr = 0
     app.timerDelay = 10
-    app.shape = 'rectangle'
+    app.shape = 'circle'
     app.timeStart = time.time()
+    app.colliding = False
+    app.gameOver = False
 
 def mousePressed(app, event):
     print(event.x, event.y)
@@ -27,14 +29,15 @@ def keyPressed(app, event):
         app.angle += 0.1
     if event.key == 'Left':
         app.angle -= 0.1
-    changeVelocity(app)
+    if event.key == "c":
+        app.shape = 'circle'
+    if event.key == 'r':
+        app.shape = 'rectangle'
     print(app.angle)
 
-def changeVelocity(app):
-
-    app.xMomentum = app.move*math.sin(app.angle)
-    app.yMomentum = app.move*math.cos(app.angle)
-    print(app.xMomentum, app.yMomentum)
+def changeMomentum(app):
+    app.xMomentum += (app.move/20)*math.cos(app.angle)
+    app.yMomentum += (app.move/20)*math.sin(app.angle)
 
 def updateEdge(app):
     app.edgeX = set()
@@ -51,33 +54,74 @@ def updateEdge(app):
     #         app.edgeY.add(yCoord)
 #########################################################
 
+def collide(app):
+    if app.colliding:
+        maxBounce = int(app.move*10)
+        steps = [x / 9.0 for x in range(maxBounce, 0, -1)]
+        steps += (x / 40.0 for x in range(2*maxBounce, 0, -1))
+        steps.sort(reverse = True)
+        print(app.moveIncr, len(steps))
+        app.cx -= steps[app.moveIncr]
+        
+        if app.moveIncr < len(steps)-1:
+            app.moveIncr += 1
+        else:
+            app.moveIncr = -1
+
+
 def timerFired(app):
     updateEdge(app)
-    currTime = time.time() - app.timeStart
-    if currTime > 2:
-        app.move += 0.1
-        app.timeStart = time.time()
-    moveX = app.move*math.cos(app.angle)
-    moveY = app.move*math.sin(app.angle)
-    app.cx += (app.xMomentum + moveX)
-    app.cy -= (app.yMomentum + moveY)
-
+    # Movement
+    if not app.colliding:
+        currTime = time.time() - app.timeStart
+        if currTime > 4:
+            app.move += 0.05
+            app.timeStart = time.time()
+        moveX = app.move*math.cos(app.angle)
+        moveY = app.move*math.sin(app.angle)
+        changeMomentum(app)
+        app.cx += (app.xMomentum + moveX)
+        app.cy += (app.yMomentum + moveY)
+    # Collision statements
+    if (app.width in app.edgeX or app.height in app.edgeY or
+                                    0 in app.edgeX or 0 in app.edgeY):
+        app.colliding = True
+        app.cx = app.width - app.cr
+        
+        if app.moveIncr != -1:
+            collide(app)
+        else:
+            print('done')
+            app.colliding = False
+            app.moveIncr = 0
+            app.move = 0
+    updateEdge(app)
 
 def drawPlayer(app, canvas):
-    # top right, bottom left
-    xr1 = app.xr*math.cos(app.angle) - app.yr*math.sin(app.angle)
-    yr1 = app.xr*math.sin(app.angle) + app.yr*math.cos(app.angle)
-    # top left, bottom right
-    xr2 = app.yr*math.sin(app.angle) + app.xr*math.cos(app.angle)
-    yr2 = app.yr*math.cos(app.angle) - app.xr*math.sin(app.angle)
-    canvas.create_polygon(app.cx+xr1, app.cy+yr1, app.cx-xr2, app.cy+yr2, 
-                        app.cx-xr1, app.cy-yr1, app.cx+xr2, app.cy-yr2,
-                       fill='darkGreen')
-
+    if app.shape == 'rectangle':
+        # top right, bottom left
+        xr1 = app.xr*math.cos(app.angle) - app.yr*math.sin(app.angle)
+        yr1 = app.xr*math.sin(app.angle) + app.yr*math.cos(app.angle)
+        # top left, bottom right
+        xr2 = app.yr*math.sin(app.angle) + app.xr*math.cos(app.angle)
+        yr2 = app.yr*math.cos(app.angle) - app.xr*math.sin(app.angle)
+        canvas.create_polygon(app.cx+xr1, app.cy+yr1, app.cx-xr2, app.cy+yr2, 
+                            app.cx-xr1, app.cy-yr1, app.cx+xr2, app.cy-yr2,
+                            fill='darkGreen')
+    elif app.shape == 'circle':
+        xr = app.cr*math.cos(app.angle)
+        yr = app.cr*math.sin(app.angle)
+        canvas.create_oval(app.cx+app.cr, app.cy+app.cr, 
+                            app.cx-app.cr, app.cy-app.cr, 
+                            fill='darkGreen')
+        canvas.create_line(app.cx, app.cy, app.cx+xr, app.cy+yr,
+                            width = 2, fill = 'red')
 
 def redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
-                       text=f'Watch the dot move! speed: {app.move}')
+                       text=(f'Watch the dot move! Speed: ',
+                                f'{round((app.move*10), 2)}mph'),
+                       font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
 runApp(width=1600, height=900)
