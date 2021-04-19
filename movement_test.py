@@ -10,6 +10,7 @@ def appStarted(app):
     app.yr = 20
     app.angle = 0
     app.move = 0.25
+    app.speed = 0
     app.xMomentum = 0
     app.yMomentum = 0
     app.edgeX = set()
@@ -35,9 +36,6 @@ def keyPressed(app, event):
         app.shape = 'rectangle'
     print(app.angle)
 
-def changeMomentum(app):
-    app.xMomentum += (app.move/20)*math.cos(app.angle)
-    app.yMomentum += (app.move/20)*math.sin(app.angle)
 
 def updateEdge(app):
     app.edgeX = set()
@@ -56,7 +54,7 @@ def updateEdge(app):
 
 def collide(app):
     if app.colliding:
-        maxBounce = int(app.move*10)
+        maxBounce = int(app.speed)
         steps = [x / 9.0 for x in range(maxBounce, 0, -1)]
         steps += (x / 40.0 for x in range(2*maxBounce, 0, -1))
         steps.sort(reverse = True)
@@ -79,22 +77,25 @@ def timerFired(app):
             app.timeStart = time.time()
         moveX = app.move*math.cos(app.angle)
         moveY = app.move*math.sin(app.angle)
-        changeMomentum(app)
+        app.xMomentum += (app.move/5)*math.cos(app.angle)
+        app.yMomentum += (app.move/5)*math.sin(app.angle)
         app.cx += (app.xMomentum + moveX)
         app.cy += (app.yMomentum + moveY)
+        app.speed = (((app.xMomentum + moveX)**2 + 
+                        (app.yMomentum + moveY)**2)**(1/2))
     # Collision statements
     if (app.width in app.edgeX or app.height in app.edgeY or
                                     0 in app.edgeX or 0 in app.edgeY):
-        app.colliding = True
-        app.cx = app.width - app.cr
-        
-        if app.moveIncr != -1:
-            collide(app)
-        else:
-            print('done')
-            app.colliding = False
-            app.moveIncr = 0
-            app.move = 0
+        print('into loop')
+        app.colliding = True        
+    while app.moveIncr != -1 and app.colliding:
+        collide(app)
+        print('moving')
+    if app.moveIncr == -1 and app.colliding:
+        print('done')
+        app.colliding = False
+        app.moveIncr = 0
+        app.move = 0
     updateEdge(app)
 
 def drawPlayer(app, canvas):
@@ -119,9 +120,9 @@ def drawPlayer(app, canvas):
 
 def redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
-                       text=(f'Watch the dot move! Speed: ',
-                                f'{round((app.move*10), 2)}mph'),
-                       font = 'Arial 20 bold')
+                       text=('Watch the dot move! Speed: ',
+                            str(int(app.speed*10)),'mph'),
+                            font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
 runApp(width=1600, height=900)
