@@ -103,7 +103,9 @@ def gameMode_timerFired(app):
         print('into loop')
         app.mode = 'gameOver'
         app.impactAngle = app.angle     
-    
+
+# create cases for four angles of collision
+# within four angles have cases for hitting forwards or backwards
 
 def drawPlayer(app, canvas):
     if app.shape == 'rectangle':
