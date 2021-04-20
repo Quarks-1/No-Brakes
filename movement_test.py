@@ -3,8 +3,8 @@ import math, time
 
 ##########################################
 # THINGS TO DO
-# create cases for four angles of collision
-# within four angles have cases for hitting forwards or backwards
+# create cases for four angle ranges of collision
+# within four ranges have cases for hitting forwards or backwards
 # Fix finding rectangle edge coors
 ##########################################
 
