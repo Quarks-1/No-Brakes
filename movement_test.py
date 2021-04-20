@@ -1,6 +1,12 @@
 from cmu_112_graphics import *
 import math, time
 
+##########################################
+# THINGS TO DO
+# create cases for four angles of collision
+# within four angles have cases for hitting forwards or backwards
+# Fix finding rectangle edge coors
+##########################################
 
 ##########################################
 # Game mode
@@ -104,9 +110,6 @@ def gameMode_timerFired(app):
         app.mode = 'gameOver'
         app.impactAngle = app.angle     
 
-# create cases for four angles of collision
-# within four angles have cases for hitting forwards or backwards
-
 def drawPlayer(app, canvas):
     if app.shape == 'rectangle':
         # top right, bottom left
@@ -129,8 +132,7 @@ def drawPlayer(app, canvas):
 
 def gameMode_redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
-                       text=('Watch the dot move! Speed: ',
-                            str(int(app.speed)),'mph'),
+                text=(f'Watch the dot move! Speed: {str(int(app.speed))}mph'),
                             font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
@@ -141,7 +143,6 @@ def gameMode_redrawAll(app, canvas):
 def gameOver_keyPressed(app, event):
     if event.key == 'u':
         appStarted(app)
-
 
 def collide(app):
     maxBounce = int(app.speed/1.5)
@@ -157,7 +158,6 @@ def collide(app):
     else:
         app.moveIncr = -1
 
-
 def gameOver_timerFired(app):
     if app.moveIncr != -1:
         collide(app)    
@@ -165,9 +165,8 @@ def gameOver_timerFired(app):
 
 def gameOver_redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
-                       text=('Game over! Top speed: ',
-                            str(int(app.maxSpeed)),'mph'),
-                            font = 'Arial 20 bold')
+                text=(f'Game over! Top speed: {str(int(app.maxSpeed))}mph'),
+                font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
 runApp(width=800, height=450)
