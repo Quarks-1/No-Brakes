@@ -1,16 +1,23 @@
 from cmu_112_graphics import *
 import math, time
 
+
+##########################################
+# Game mode
+##########################################
+
 def appStarted(app):
     # payer setup
     app.cx = int(app.width/2)
     app.cy = int(app.height/2)
-    app.cr = 30
-    app.xr = 40
-    app.yr = 20
+    app.cr = 15
+    app.xr = 20
+    app.yr = 10
     app.angle = 0
+    app.impactAngle = 0
     app.move = 0.25
-    app.speed = 0
+    app.speed = 0   #Measured in mph
+    app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
     app.yMomentum = 0
     app.edgeX = set()
@@ -18,14 +25,16 @@ def appStarted(app):
     app.moveIncr = 0
     app.timerDelay = 10
     app.shape = 'circle'
+    app.playerColor = 'red'
     app.timeStart = time.time()
     app.colliding = False
     app.gameOver = False
+    app.mode = 'gameMode'
 
-def mousePressed(app, event):
+def gameMode_mousePressed(app, event):
     print(event.x, event.y)
 
-def keyPressed(app, event):
+def gameMode_keyPressed(app, event):
     if event.key == 'Right':
         app.angle += 0.1
     if event.key == 'Left':
@@ -34,7 +43,8 @@ def keyPressed(app, event):
         app.shape = 'circle'
     if event.key == 'r':
         app.shape = 'rectangle'
-    print(app.angle)
+    if event.key == 'u':
+        appStarted(app)
 
 
 def updateEdge(app):
@@ -52,51 +62,48 @@ def updateEdge(app):
     #         app.edgeY.add(yCoord)
 #########################################################
 
-def collide(app):
-    if app.colliding:
-        maxBounce = int(app.speed)
-        steps = [x / 9.0 for x in range(maxBounce, 0, -1)]
-        steps += (x / 40.0 for x in range(2*maxBounce, 0, -1))
-        steps.sort(reverse = True)
-        print(app.moveIncr, len(steps))
-        app.cx -= steps[app.moveIncr]
-        
-        if app.moveIncr < len(steps)-1:
-            app.moveIncr += 1
-        else:
-            app.moveIncr = -1
+def checkLevel(app):
+    print(app.maxSpeed)
+    if 0 < app.maxSpeed < 25:
+        app.move = 0.15
+        app.playerColor = 'red'
+        # print('updated color')
+    if 25 < app.maxSpeed < 45:
+        app.move = 0.25
+        app.playerColor = 'yellow'
+        print('updated color')
+    if 45 < app.maxSpeed < 65:
+        app.move = 0.45
+        app.playerColor = 'green'
+        print('updated color')
+    if app.maxSpeed > 65:
+        app.move = 0.65
+        app.playerColor = 'blue'
+        print('updated color')
+    
 
-
-def timerFired(app):
+def gameMode_timerFired(app):
     updateEdge(app)
     # Movement
     if not app.colliding:
-        currTime = time.time() - app.timeStart
-        if currTime > 4:
-            app.move += 0.05
-            app.timeStart = time.time()
         moveX = app.move*math.cos(app.angle)
         moveY = app.move*math.sin(app.angle)
-        app.xMomentum += (app.move/5)*math.cos(app.angle)
-        app.yMomentum += (app.move/5)*math.sin(app.angle)
+        app.xMomentum += (app.move/15)*math.cos(app.angle)
+        app.yMomentum += (app.move/15)*math.sin(app.angle)
         app.cx += (app.xMomentum + moveX)
         app.cy += (app.yMomentum + moveY)
         app.speed = (((app.xMomentum + moveX)**2 + 
-                        (app.yMomentum + moveY)**2)**(1/2))
+                        (app.yMomentum + moveY)**2)**(1/2))*10
+        if app.maxSpeed < app.speed:
+            app.maxSpeed = app.speed
+        checkLevel(app)
     # Collision statements
     if (app.width in app.edgeX or app.height in app.edgeY or
                                     0 in app.edgeX or 0 in app.edgeY):
         print('into loop')
-        app.colliding = True        
-    while app.moveIncr != -1 and app.colliding:
-        collide(app)
-        print('moving')
-    if app.moveIncr == -1 and app.colliding:
-        print('done')
-        app.colliding = False
-        app.moveIncr = 0
-        app.move = 0
-    updateEdge(app)
+        app.mode = 'gameOver'
+        app.impactAngle = app.angle     
+    
 
 def drawPlayer(app, canvas):
     if app.shape == 'rectangle':
@@ -108,21 +115,57 @@ def drawPlayer(app, canvas):
         yr2 = app.yr*math.cos(app.angle) - app.xr*math.sin(app.angle)
         canvas.create_polygon(app.cx+xr1, app.cy+yr1, app.cx-xr2, app.cy+yr2, 
                             app.cx-xr1, app.cy-yr1, app.cx+xr2, app.cy-yr2,
-                            fill='darkGreen')
+                            fill=app.playerColor)
     elif app.shape == 'circle':
         xr = app.cr*math.cos(app.angle)
         yr = app.cr*math.sin(app.angle)
         canvas.create_oval(app.cx+app.cr, app.cy+app.cr, 
                             app.cx-app.cr, app.cy-app.cr, 
-                            fill='darkGreen')
+                            fill=app.playerColor)
         canvas.create_line(app.cx, app.cy, app.cx+xr, app.cy+yr,
-                            width = 2, fill = 'red')
+                            width = 2, fill = 'black')
 
-def redrawAll(app, canvas):
+def gameMode_redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
                        text=('Watch the dot move! Speed: ',
-                            str(int(app.speed*10)),'mph'),
+                            str(int(app.speed)),'mph'),
                             font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
-runApp(width=1600, height=900)
+##########################################
+# Game Over Mode
+##########################################
+
+def gameOver_keyPressed(app, event):
+    if event.key == 'u':
+        appStarted(app)
+
+
+def collide(app):
+    maxBounce = int(app.speed/1.5)
+    steps = [x / 9.0 for x in range(maxBounce, 0, -1)]
+    steps += (x / 40.0 for x in range(3*maxBounce, 0, -1))
+    steps.sort(reverse = True)
+    print(app.moveIncr, len(steps))
+    app.cx -= steps[app.moveIncr]*math.cos(app.impactAngle)
+    app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
+    app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+    if app.moveIncr < len(steps)-1:
+        app.moveIncr += 1
+    else:
+        app.moveIncr = -1
+
+
+def gameOver_timerFired(app):
+    if app.moveIncr != -1:
+        collide(app)    
+    updateEdge(app)
+
+def gameOver_redrawAll(app, canvas):
+    canvas.create_text(app.width/2, 20,
+                       text=('Game over! Top speed: ',
+                            str(int(app.maxSpeed)),'mph'),
+                            font = 'Arial 20 bold')
+    drawPlayer(app, canvas)
+
+runApp(width=800, height=450)
