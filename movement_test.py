@@ -56,18 +56,23 @@ def gameMode_keyPressed(app, event):
 
 
 def updateEdge(app):
-    app.edgeX = set()
-    app.edgeY = set()
     if app.shape == 'circle':
         for angle in range(0, 361):
             app.edgeX.add(int(app.cx + app.cr*math.cos(angle/(2*math.pi))))
             app.edgeY.add(int(app.cy + app.cr*math.sin(angle/(2*math.pi))))
+
+# calc intial values using trig
+# front: h/2 cos(315-45)
+# top = h/2 sin(45-135)
+# back = h/2 cos(135-225)
+# bottom = h/2 sin(225-315)
+
 ########################################################
-    # if app.shape == 'rectangle':
-    #     for xCoord in range(app.cx - app.xr, app.cx + app.xr + 1, 1):
-    #         app.edgeX.add(xCoord)
-    #     for yCoord in range(app.cy - app.yr, app.cy + app.yr + 1, 1):
-    #         app.edgeY.add(yCoord)
+    if app.shape == 'rectangle':
+        for xCoord in range(app.cx - app.xr, app.cx + app.xr + 1, 1):
+            app.edgeX.add(xCoord)
+        for yCoord in range(app.cy - app.yr, app.cy + app.yr + 1, 1):
+            app.edgeY.add(yCoord)
 #########################################################
 
 def checkLevel(app):
