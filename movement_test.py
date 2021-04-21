@@ -12,6 +12,15 @@ import math, time
 # Game mode
 ##########################################
 
+# Set boundry coordinates
+def setWallCoords(app):
+    for x in range(app.width):
+        app.wallCoords.add((x, 0))
+        app.wallCoords.add((x, app.height))
+    for y in range(app.height):
+        app.wallCoords.add((0, y))
+        app.wallCoords.add((app.width, y))
+
 def appStarted(app):
     # payer setup
     app.cx = int(app.width/2)
@@ -26,19 +35,20 @@ def appStarted(app):
     app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
     app.yMomentum = 0
-    app.edgeX = set()
-    app.edgeY = set()
+    app.edgeCoords = set()  #Coordinates of player border
+    app.wallCoords = set()  #Coordinates of level borders
+    setWallCoords(app)
     app.moveIncr = 0
     app.timerDelay = 10
     app.shape = 'circle'
     app.playerColor = 'red'
     app.timeStart = time.time()
-    app.colliding = False
-    app.gameOver = False
     app.mode = 'gameMode'
 
 def gameMode_mousePressed(app, event):
     print(event.x, event.y)
+    if event.x in app.edgeX and event.y in app.edgeY:
+        print('It works')
 
 def gameMode_keyPressed(app, event):
     if event.key == 'Right':
@@ -56,30 +66,33 @@ def gameMode_keyPressed(app, event):
 
 
 def updateEdge(app):
+    app.edgeCoords = set()
     if app.shape == 'circle':
-        for angle in range(0, 361):
-            app.edgeX.add(int(app.cx + app.cr*math.cos(angle/(2*math.pi))))
-            app.edgeY.add(int(app.cy + app.cr*math.sin(angle/(2*math.pi))))
-
-# calc intial values using trig
-# front: h/2 cos(315-45)
-# top = h/2 sin(45-135)
-# back = h/2 cos(135-225)
-# bottom = h/2 sin(225-315)
-
-########################################################
+        for angle in range(0, 360):
+            angle = angle*(math.pi/180)
+            app.edgeCoords.add((int(app.cx+app.cr*math.cos(angle)), 
+                              int(app.cy+app.cr*math.sin(angle))))
     if app.shape == 'rectangle':
-        for xCoord in range(app.cx - app.xr, app.cx + app.xr + 1, 1):
-            app.edgeX.add(xCoord)
-        for yCoord in range(app.cy - app.yr, app.cy + app.yr + 1, 1):
-            app.edgeY.add(yCoord)
-#########################################################
+    # Find initial values before rotation
+        tempEdgeCoords = set()
+        for x in range(-app.xr, app.xr+1):
+            tempEdgeCoords.add((x, -app.yr))
+            tempEdgeCoords.add((x, app.yr))
+        for y in range(-app.yr, app.yr+1):
+            tempEdgeCoords.add((-app.xr, y))
+            tempEdgeCoords.add((app.xr, y))
+        # Rotate by angle of player
+        for (x, y) in tempEdgeCoords:
+            xr = x*math.cos(app.angle) - y*math.sin(app.angle)
+            yr = x*math.sin(app.angle) + y*math.cos(app.angle)
+            # Add to actual edge coordinate list
+            app.edgeCoords.add((int(app.cx + xr), int(app.cy + yr)))
+
 
 def checkLevel(app):
     if 0 < app.maxSpeed < 25:
         app.move = 0.15
         app.playerColor = 'red'
-        # print('updated color')
     if 25 < app.maxSpeed < 45:
         app.move = 0.25
         app.playerColor = 'yellow'
@@ -92,27 +105,25 @@ def checkLevel(app):
     
 
 def gameMode_timerFired(app):
-    updateEdge(app)
     # Movement
-    if not app.colliding:
-        moveX = app.move*math.cos(app.angle)
-        moveY = app.move*math.sin(app.angle)
-        app.xMomentum += (app.move/15)*math.cos(app.angle)
-        app.yMomentum += (app.move/15)*math.sin(app.angle)
-        app.cx += (app.xMomentum + moveX)
-        app.cy += (app.yMomentum + moveY)
-        app.speed = (((app.xMomentum + moveX)**2 + 
-                        (app.yMomentum + moveY)**2)**(1/2))*10
-        if app.maxSpeed < app.speed:
-            app.maxSpeed = app.speed
-        checkLevel(app)
+    moveX = app.move*math.cos(app.angle)
+    moveY = app.move*math.sin(app.angle)
+    app.xMomentum += (app.move/15)*math.cos(app.angle)
+    app.yMomentum += (app.move/15)*math.sin(app.angle)
+    app.cx += (app.xMomentum + moveX)
+    app.cy += (app.yMomentum + moveY)
+    updateEdge(app)
+    app.speed = (((app.xMomentum + moveX)**2 + 
+                    (app.yMomentum + moveY)**2)**(1/2))*10
+    if app.maxSpeed < app.speed:
+        app.maxSpeed = app.speed
+    checkLevel(app)
     # Collision statements
-    if (app.width in app.edgeX or app.height in app.edgeY or
-                                    0 in app.edgeX or 0 in app.edgeY):
-        print('into loop')
-        app.mode = 'gameOver'
-        app.impactAngle = app.angle
-        print(app.impactAngle)
+    for coord in app.edgeCoords:
+        if coord in app.wallCoords:
+            app.mode = 'gameOver'
+            app.impactAngle = app.angle
+            print(app.impactAngle)
 
 def drawPlayer(app, canvas):
     if app.shape == 'rectangle':
@@ -124,7 +135,7 @@ def drawPlayer(app, canvas):
         yr2 = app.yr*math.cos(app.angle) - app.xr*math.sin(app.angle)
         canvas.create_polygon(app.cx+xr1, app.cy+yr1, app.cx-xr2, app.cy+yr2, 
                             app.cx-xr1, app.cy-yr1, app.cx+xr2, app.cy-yr2,
-                            fill=app.playerColor)
+                            fill=app.playerColor, outline = 'black', width = 2)
     elif app.shape == 'circle':
         xr = app.cr*math.cos(app.angle)
         yr = app.cr*math.sin(app.angle)
