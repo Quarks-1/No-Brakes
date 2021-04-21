@@ -1,11 +1,9 @@
 from cmu_112_graphics import *
 import math, time
 
-##########################################
-# THINGS TO DO
+############## THINGS TO DO ##############
 # create cases for four angle ranges of collision
 # within four ranges have cases for hitting forwards or backwards
-# Fix finding rectangle edge coords
 ##########################################
 
 ##########################################
@@ -159,6 +157,12 @@ def gameOver_keyPressed(app, event):
     if event.key == 'u':
         appStarted(app)
 
+def angleChange(app, steps):
+    if app.shape == 'circle':
+        app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+    else:
+        app.angle -= steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+
 def collide(app):
     maxBounce = int(app.speed/1.5)
     steps = [x / 9.0 for x in range(maxBounce, 0, -1)]  #initial bounce values
@@ -168,20 +172,20 @@ def collide(app):
         if app.impactAngle > 3*math.pi/2 or app.impactAngle < math.pi/2:
             app.cx -= steps[app.moveIncr]*math.cos(app.impactAngle)
             app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+            angleChange(app, steps)
         elif math.pi/2 < app.impactAngle < 3*math.pi/2:
             app.cx += steps[app.moveIncr]*math.cos(app.impactAngle)
             app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+            angleChange(app, steps)
     elif app.impactAngle < 0:
         if app.impactAngle > -math.pi/2 or app.impactAngle < -3*math.pi/2:
             app.cx -= steps[app.moveIncr]*math.cos(app.impactAngle)
             app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+            angleChange(app, steps)
         elif -3*math.pi/2 < app.impactAngle < -math.pi/2:
             app.cx += steps[app.moveIncr]*math.sin(app.impactAngle)
             app.cy += steps[app.moveIncr]*math.cos(app.impactAngle)
-            app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+            angleChange(app, steps)
     else:
         pass
     
@@ -201,4 +205,4 @@ def gameOver_redrawAll(app, canvas):
                 font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
-runApp(width=800, height=450)
+runApp(width=1400, height=750)
