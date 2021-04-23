@@ -101,6 +101,13 @@ def checkLevel(app):
         app.move = 0.65
         app.playerColor = 'blue'
     
+def momentumCalc(app):
+    if ((app.xMomentum < 0 and math.cos(app.angle) > 0) or
+            (app.xMomentum > 0 and math.cos(app.angle) < 0)):
+        app.xMomentum *= .95
+    if ((app.yMomentum < 0 and math.sin(app.angle) > 0) or
+            (app.yMomentum > 0 and math.sin(app.angle) < 0)):
+        app.yMomentum *= .95
 
 def gameMode_timerFired(app):
     # Movement
@@ -108,6 +115,7 @@ def gameMode_timerFired(app):
     moveY = app.move*math.sin(app.angle)
     app.xMomentum += (app.move/15)*math.cos(app.angle)
     app.yMomentum += (app.move/15)*math.sin(app.angle)
+    momentumCalc(app)      # This adjusts for sharp turns
     app.cx += (app.xMomentum + moveX)
     app.cy += (app.yMomentum + moveY)
     updateEdge(app)
@@ -116,12 +124,13 @@ def gameMode_timerFired(app):
     if app.maxSpeed < app.speed:
         app.maxSpeed = app.speed
     checkLevel(app)
-    # Collision statements
-    for coord in app.edgeCoords:
-        if coord in app.wallCoords:
-            app.mode = 'gameOver'
-            app.impactAngle = app.angle
-            print(app.impactAngle)
+    
+    # Collision detection
+    if app.wallCoords.intersection(app.edgeCoords) != set():
+        app.mode = 'gameOver'
+        app.impactAngle = app.angle
+        print(app.impactAngle)
+
 
 def drawPlayer(app, canvas):
     if app.shape == 'rectangle':
