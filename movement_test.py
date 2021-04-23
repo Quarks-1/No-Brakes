@@ -12,90 +12,106 @@ import math, time, random
 ##########################################
 
 # Create possible map
-def createMap(app):
-    rows = app.height//100
-    cols = app.width//100
-    app.map = [[0]*(cols) for x in range(rows)]
-    app.map[1][1] = 1
-    mapBlocks = []
-    # Create all possible blocks
-    for i in range(2):
-        for j in range(2):
-            for k in range(2):
-                for l in range(2):
-                    mapBlocks += ([(i, j, k, l)])
-    # randomly add them to level
-    for row in range(1, rows-1, 2):
-        for col in range(1, cols-1, 2):
-            if app.map[row][col] == 0:
-                block = random.choice(mapBlocks)
-                app.map[row][col] = block[0]
-                app.map[row][col+1] = block[1]
-                app.map[row+1][col] = block[2]
-                app.map[row+1][col+1] = block[3]
+# def createMap(app):
+#     rows = app.height//100
+#     cols = app.width//100
+#     app.map = [[0]*(cols) for x in range(rows)]
+#     app.map[1][1] = 1
+#     mapBlocks = []
+#     # Create all possible blocks
+#     for i in range(2):
+#         for j in range(2):
+#             for k in range(2):
+#                 for l in range(2):
+#                     mapBlocks += ([(i, j, k, l)])
+#     # randomly add them to level
+#     for row in range(1, rows-1, 2):
+#         for col in range(1, cols-1, 2):
+#             if app.map[row][col] == 0:
+#                 block = random.choice(mapBlocks)
+#                 app.map[row][col] = block[0]
+#                 app.map[row][col+1] = block[1]
+#                 app.map[row+1][col] = block[2]
+#                 app.map[row+1][col+1] = block[3]
     
-    print(app.map)
-    
+#     print(app.map)
+def getWalls(map, row, col, walls):
+    for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+        newRow, newCol = row + drow, col + dcol
+        if map[newRow][newCol] == 2:
+            walls += [(newRow, newCol)]
+    return walls
+
 def createMap(app):
     app.map = [ [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
+                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
+                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
+                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
+                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
+                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
+                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] ]
     startRow, startCol = 1, 1
-    createMaze(app.map, startRow, startCol)
-
-def createMaze(map, startRow, startCol, solved):
-    if (startRow, startCol) == (1,1) and solved == True
-
-# Check for solution
-def mapChecker(app, L):
-    startRow, startCol = 1, 1
-    P = copy.deepcopy(L)
-    if helper(app, P, startRow, startCol):
-        return True
-    return False
+    walls = []
+    walls = getWalls(app.map, startRow, startCol, walls)
+    while len(walls) > 0:
+        wallRow, wallCol = random.choice(walls)
+        
+        
 
 
-def helper(app, L, startRow, startCol): #Check one way trip
-    if (startRow, startCol) == (len(L)-2, len(L[0])-2):
-        return True
-    else:
-        for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
-            newRow, newCol = startRow + drow, startCol + dcol
-            if (newRow, newCol) in app.visited:
-                continue
-            if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
-                if L[newRow][newCol] == 1:
-                    app.visited.add((startRow, startCol))
-                    solved = helper(app, L, newRow, newCol)
-                    if solved == True:
-                        return True
-        return None
+
+
+
+# def createMaze(map, startRow, startCol, solved):
+
+#     while 
+
+# # Check for solution
+# def mapChecker(app, L):
+#     startRow, startCol = 1, 1
+#     P = copy.deepcopy(L)
+#     if helper(app, P, startRow, startCol):
+#         return True
+#     return False
+
+
+# def helper(app, L, startRow, startCol): #Check one way trip
+#     if (startRow, startCol) == (len(L)-2, len(L[0])-2):
+#         return True
+#     else:
+#         for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+#             newRow, newCol = startRow + drow, startCol + dcol
+#             if (newRow, newCol) in app.visited:
+#                 continue
+#             if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
+#                 if L[newRow][newCol] == 1:
+#                     app.visited.add((startRow, startCol))
+#                     solved = helper(app, L, newRow, newCol)
+#                     if solved == True:
+#                         return True
+#         return None
     
-def helper2(app, L, startRow, startCol): #Check way back
-    if (startRow, startCol) == (1, 1):
-        return True
-    else:
-        for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
-            newRow, newCol = startRow + drow, startCol + dcol
-            if (newRow, newCol) in app.visited:
-                continue
-            if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
-                if L[newRow][newCol]==1 and (newRow, newCol) not in app.visited:
-                    app.visited.add((startRow, startCol))
-                    solved = helper(app, L, newRow, newCol)
-                    if solved == True:
-                        return True
-        return None
+# def helper2(app, L, startRow, startCol): #Check way back
+#     if (startRow, startCol) == (1, 1):
+#         return True
+#     else:
+#         for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+#             newRow, newCol = startRow + drow, startCol + dcol
+#             if (newRow, newCol) in app.visited:
+#                 continue
+#             if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
+#                 if L[newRow][newCol]==1 and (newRow, newCol) not in app.visited:
+#                     app.visited.add((startRow, startCol))
+#                     solved = helper(app, L, newRow, newCol)
+#                     if solved == True:
+#                         return True
+#         return None
 
 
 
@@ -127,7 +143,6 @@ def appStarted(app):
     app.map = []
     app.visited = set()
     createMap(app)
-    print(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     setWallCoords(app)
