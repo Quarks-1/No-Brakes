@@ -1,14 +1,73 @@
 from cmu_112_graphics import *
-import math, time
+import math, time, random
 
 ############## THINGS TO DO ##############
-# create cases for four angle ranges of collision
+# adjust cases for top and bottom collision (maybe revamp system idk)
 # within four ranges have cases for hitting forwards or backwards
+# 
 ##########################################
 
 ##########################################
 # Game mode
 ##########################################
+
+# Create possible map
+def createMap(app):
+    rows = app.height//100
+    cols = app.width//100
+    app.map = [[0]*(cols) for x in range(rows)]
+    app.map[1][1] = 1
+    for row in range(1, rows-1):
+        for col in range(1, cols-1):
+            if app.map[row][col] == 0:
+                app.map[row][col] = random.randint(0,1)
+    
+    # print(app.map)
+    
+
+# Check for solution
+def mapChecker(app, L):
+    startRow, startCol = 1, app.map[1].index(1)
+    P = copy.deepcopy(L)
+    if helper(app, P, startRow, startCol):
+        if helper2(app, P, len(P)-1, len(P[0])-2):
+            return True
+    return False
+
+
+def helper(app, L, startRow, startCol): #Check one way trip
+    if (startRow, startCol) == (len(L)-2, len(L[0])-2):
+        return True
+    else:
+        for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+            newRow, newCol = startRow + drow, startCol + dcol
+            if (newRow, newCol) in app.visited:
+                return False
+            if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
+                if L[newRow][newCol] == 1:
+                    app.visited.add((startRow, startCol))
+                    solved = helper(app, L, newRow, newCol)
+                    if solved == True:
+                        return True
+        return None
+    
+def helper2(app, L, startRow, startCol): #Check way back
+    if (startRow, startCol) == (1, 1):
+        return True
+    else:
+        for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+            newRow, newCol = startRow + drow, startCol + dcol
+            if (newRow, newCol) in app.visited:
+                return False
+            if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
+                if L[newRow][newCol]==1 and (newRow, newCol) not in app.visited:
+                    app.visited.add((startRow, startCol))
+                    solved = helper(app, L, newRow, newCol)
+                    if solved == True:
+                        return True
+        return None
+
+
 
 # Set boundry coordinates
 def setWallCoords(app):
@@ -35,6 +94,13 @@ def appStarted(app):
     app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
     app.yMomentum = 0
+    app.map = []
+    app.visited = set()
+    createMap(app)
+    while mapChecker(app, app.map) == False:
+        app.visited = set()
+        createMap(app)
+    print(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     setWallCoords(app)
