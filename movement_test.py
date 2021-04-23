@@ -29,6 +29,8 @@ def appStarted(app):
     app.angle = 0
     app.impactAngle = 0
     app.move = 0.25
+    app.xTotalSpeed = 0
+    app.yTotalSpeed = 0
     app.speed = 0   #Measured in mph
     app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
@@ -45,7 +47,7 @@ def appStarted(app):
 
 def gameMode_mousePressed(app, event):
     print(event.x, event.y)
-    if event.x in app.edgeX and event.y in app.edgeY:
+    if (event.x, event.y) in app.edgeCoords:
         print('It works')
 
 def gameMode_keyPressed(app, event):
@@ -116,15 +118,16 @@ def gameMode_timerFired(app):
     app.xMomentum += (app.move/15)*math.cos(app.angle)
     app.yMomentum += (app.move/15)*math.sin(app.angle)
     momentumCalc(app)      # This adjusts for sharp turns
-    app.cx += (app.xMomentum + moveX)
-    app.cy += (app.yMomentum + moveY)
+    app.xTotalSpeed = (app.xMomentum + moveX)
+    app.yTotalSpeed = (app.yMomentum + moveY)
+    app.cx += app.xTotalSpeed
+    app.cy += app.yTotalSpeed
     updateEdge(app)
-    app.speed = (((app.xMomentum + moveX)**2 + 
-                    (app.yMomentum + moveY)**2)**(1/2))*10
+    app.speed = ((app.xTotalSpeed**2 + app.yTotalSpeed**2)**(1/2))*10
     if app.maxSpeed < app.speed:
         app.maxSpeed = app.speed
     checkLevel(app)
-    
+
     # Collision detection
     if app.wallCoords.intersection(app.edgeCoords) != set():
         app.mode = 'gameOver'
@@ -166,38 +169,67 @@ def gameOver_keyPressed(app, event):
     if event.key == 'u':
         appStarted(app)
 
-def angleChange(app, steps):
+def angleChange(app, steps, angle):
     if app.shape == 'circle':
-        app.angle += steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+        app.angle += steps[app.moveIncr]*math.sin(angle)*0.02
     else:
-        app.angle -= steps[app.moveIncr]*math.sin(app.impactAngle)*0.02
+        app.angle -= steps[app.moveIncr]*math.sin(angle)*0.02
 
 def collide(app):
     maxBounce = int(app.speed/1.5)
     steps = [x / 9.0 for x in range(maxBounce, 0, -1)]  #initial bounce values
     steps += (x / 40.0 for x in range(3*maxBounce, 0, -1))  #smoothing values
     steps.sort(reverse = True)
+    # Many different cases for front/back player impact 
+    # and left/right side level impact
+    xDir = 1
+    yDir = 1
+    angleDir = 1
     if app.impactAngle > 0:
-        if app.impactAngle > 3*math.pi/2 or app.impactAngle < math.pi/2:
-            app.cx -= steps[app.moveIncr]*math.cos(app.impactAngle)
-            app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            angleChange(app, steps)
-        elif math.pi/2 < app.impactAngle < 3*math.pi/2:
-            app.cx += steps[app.moveIncr]*math.cos(app.impactAngle)
-            app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            angleChange(app, steps)
+        if app.xMomentum > 0:
+            if app.impactAngle > 3*math.pi/2 or app.impactAngle < math.pi/2:
+                xDir = -1
+                yDir = 1
+                angleDir = 1
+            elif math.pi/2 < app.impactAngle < 3*math.pi/2:
+                xDir = 1
+                yDir = 1
+                angleDir = 1
+            angleChange(app, steps, app.impactAngle)
+        else:
+            if app.impactAngle > 3*math.pi/2 or app.impactAngle < math.pi/2:
+                xDir = 1
+                yDir = 1
+                angleDir = -1
+            elif math.pi/2 < app.impactAngle < 3*math.pi/2:
+                xDir = -1
+                yDir = 1
+                angleDir = -1
+            angleChange(app, steps, -app.impactAngle)
     elif app.impactAngle < 0:
-        if app.impactAngle > -math.pi/2 or app.impactAngle < -3*math.pi/2:
-            app.cx -= steps[app.moveIncr]*math.cos(app.impactAngle)
-            app.cy += steps[app.moveIncr]*math.sin(app.impactAngle)
-            angleChange(app, steps)
-        elif -3*math.pi/2 < app.impactAngle < -math.pi/2:
-            app.cx += steps[app.moveIncr]*math.sin(app.impactAngle)
-            app.cy += steps[app.moveIncr]*math.cos(app.impactAngle)
-            angleChange(app, steps)
-    else:
-        pass
-    
+        if app.xMomentum > 0:
+            if app.impactAngle > -math.pi/2 or app.impactAngle < -3*math.pi/2:
+                xDir = -1
+                yDir = 1
+                angleDir = 1
+            elif -3*math.pi/2 < app.impactAngle < -math.pi/2:
+                xDir = 1
+                yDir = 1
+                angleDir = 1
+            angleChange(app, steps, app.impactAngle)
+        else:
+            if app.impactAngle > -math.pi/2 or app.impactAngle < -3*math.pi/2:
+                xDir = 1
+                yDir = 1
+                angleDir = -1
+            elif -3*math.pi/2 < app.impactAngle < -math.pi/2:
+                xDir = -1
+                yDir = 1
+                angleDir = -1
+            angleChange(app, steps, -app.impactAngle)
+    app.cx += (steps[app.moveIncr]*math.cos(app.impactAngle))*xDir
+    app.cy += (steps[app.moveIncr]*math.sin(app.impactAngle))*yDir
+    angleChange(app, steps, app.impactAngle*angleDir)
     if app.moveIncr < len(steps)-1:
         app.moveIncr += 1
     else:
