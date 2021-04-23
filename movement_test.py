@@ -17,21 +17,51 @@ def createMap(app):
     cols = app.width//100
     app.map = [[0]*(cols) for x in range(rows)]
     app.map[1][1] = 1
-    for row in range(1, rows-1):
-        for col in range(1, cols-1):
+    mapBlocks = []
+    # Create all possible blocks
+    for i in range(2):
+        for j in range(2):
+            for k in range(2):
+                for l in range(2):
+                    mapBlocks += ([(i, j, k, l)])
+    # randomly add them to level
+    for row in range(1, rows-1, 2):
+        for col in range(1, cols-1, 2):
             if app.map[row][col] == 0:
-                app.map[row][col] = random.randint(0,1)
+                block = random.choice(mapBlocks)
+                app.map[row][col] = block[0]
+                app.map[row][col+1] = block[1]
+                app.map[row+1][col] = block[2]
+                app.map[row+1][col+1] = block[3]
     
-    # print(app.map)
+    print(app.map)
     
+def createMap(app):
+    app.map = [ [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] ]
+    startRow, startCol = 1, 1
+    createMaze(app.map, startRow, startCol)
+
+def createMaze(map, startRow, startCol, solved):
+    if (startRow, startCol) == (1,1) and solved == True
 
 # Check for solution
 def mapChecker(app, L):
-    startRow, startCol = 1, app.map[1].index(1)
+    startRow, startCol = 1, 1
     P = copy.deepcopy(L)
     if helper(app, P, startRow, startCol):
-        if helper2(app, P, len(P)-1, len(P[0])-2):
-            return True
+        return True
     return False
 
 
@@ -42,7 +72,7 @@ def helper(app, L, startRow, startCol): #Check one way trip
         for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
             newRow, newCol = startRow + drow, startCol + dcol
             if (newRow, newCol) in app.visited:
-                return False
+                continue
             if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
                 if L[newRow][newCol] == 1:
                     app.visited.add((startRow, startCol))
@@ -58,7 +88,7 @@ def helper2(app, L, startRow, startCol): #Check way back
         for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
             newRow, newCol = startRow + drow, startCol + dcol
             if (newRow, newCol) in app.visited:
-                return False
+                continue
             if 0 <= newRow < len(L) and 0 <= newCol < len(L[0]):
                 if L[newRow][newCol]==1 and (newRow, newCol) not in app.visited:
                     app.visited.add((startRow, startCol))
@@ -97,9 +127,6 @@ def appStarted(app):
     app.map = []
     app.visited = set()
     createMap(app)
-    while mapChecker(app, app.map) == False:
-        app.visited = set()
-        createMap(app)
     print(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
@@ -312,4 +339,4 @@ def gameOver_redrawAll(app, canvas):
                 font = 'Arial 20 bold')
     drawPlayer(app, canvas)
 
-runApp(width=1400, height=750)
+runApp(width=1300, height=850)
