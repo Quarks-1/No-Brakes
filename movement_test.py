@@ -188,17 +188,20 @@ def appStarted(app):
     app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
     app.yMomentum = 0
+    # Map generation
     app.map = []
     createMap(app)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     setWallCoords(app)
+    # Other
     app.moveIncr = 0
     app.timerDelay = 10
     app.shape = 'circle'
     app.playerColor = 'red'
     app.timeStart = time.time()
     app.mode = 'gameMode'
+    print('Please be sure to turn off Caps lock!!!')
 
 def gameMode_mousePressed(app, event):
     print(event.x, event.y)
@@ -246,10 +249,10 @@ def updateEdge(app):
 
 def checkLevel(app):
     if 0 < app.maxSpeed < 25:
-        app.move = 0.15
+        app.move = 0.25
         app.playerColor = 'red'
     if 25 < app.maxSpeed < 45:
-        app.move = 0.25
+        app.move = 0.35
         app.playerColor = 'yellow'
     if 45 < app.maxSpeed < 65:
         app.move = 0.45
