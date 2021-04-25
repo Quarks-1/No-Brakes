@@ -34,7 +34,7 @@ def createMap(app):
                 [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] ]
     startRow, startCol = 1, 1
-    walls = []  #List of walls needed to be adjusted
+    walls = set()  #List of walls needed to be adjusted
     visited = []    #List of 0's that have been visited
     getWalls(app.map, walls, visited, startRow, startCol)
     while walls != []:
@@ -52,7 +52,8 @@ def createMap(app):
                 visited += [(wallRow + drow/2, wallCol + dcol/2)] + 
                             [()]
 
-        walls.pop(walls.index((someRow, someCol)))
+        walls.remove((someRow, someCol))
+    print(app.map)
 
 # Set boundry coordinates
 def setWallCoords(app):
