@@ -4,74 +4,182 @@ import math, time, random
 ############## THINGS TO DO ##############
 # adjust cases for top and bottom collision (maybe revamp system idk)
 # within four ranges have cases for hitting forwards or backwards
-# 
 ##########################################
 
 ##########################################
 # Game mode
 ##########################################
 
+######################################################################
+# From: https://www.cs.cmu.edu/~112/notes/notes-2d-lists.html#printing
+# Helper function for print2dList.
+# This finds the maximum length of the string
+# representation of any item in the 2d list
+def maxItemLength(a):
+    maxLen = 0
+    rows = len(a)
+    cols = len(a[0])
+    for row in range(rows):
+        for col in range(cols):
+            maxLen = max(maxLen, len(str(a[row][col])))
+    return maxLen
 
-def getWalls(map, walls, row, col):
-    visited += [(row, col)]
+# Because Python prints 2d lists on one row,
+# we might want to write our own function
+# that prints 2d lists a bit nicer.
+def print2dList(a):
+    if (a == []):
+        # So we don't crash accessing a[0]
+        print([])
+        return
+    rows, cols = len(a), len(a[0])
+    fieldWidth = maxItemLength(a)
+    print('[')
+    for row in range(rows):
+        print(' [ ', end='')
+        for col in range(cols):
+            if (col > 0): print(', ', end='')
+            print(str(a[row][col]).rjust(fieldWidth), end='')
+        print(' ]')
+    print(']')
+######################################################################
+
+
+def getSurroundingCells(app, row, col):
+    count = 0
     for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
         newRow, newCol = row + drow, col + dcol
-        if map[newRow][newCol] == 2:
-            walls += [(newRow, newCol)]
+        if app.map[newRow][newCol] == 'c':
+            count += 1
+    return count
+
 
 def createMap(app):
-    app.map = [ [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
-                [1, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] ]
+    rows = app.height//100
+    cols = app.width//100
+    app.map = [['u' for i in range(cols)] for j in range(rows)]
     startRow, startCol = 1, 1
-    walls = set()  #List of walls needed to be adjusted
-    visited = []    #List of 0's that have been visited
-    getWalls(app.map, walls, visited, startRow, startCol)
-    while walls != []:
-        wallRow, wallCol = random.choice(walls)
-        checked = []    #List of coords for surrounding spaces
-        for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
-            newRow, newCol = wallRow + drow, wallCol + dcol
-            if app.map[newRow][newCol] == 0:
-                checked += [(drow, dcol)]
-        if len(checked) > 2:
-            continue
-        for (row, col) in checked:
-            if (row, col) in visited:
-                app.map[wallRow + drow/2][wallCol + dcol/2] = 0
-                visited += [(wallRow + drow/2, wallCol + dcol/2)] + 
-                            [()]
+    app.map[startRow][startCol] = 'c'
+    walls = []
+    illegalVals = [0, rows-1, cols-1]
+    # Create first set of walls
+    for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
+        newRow, newCol = startRow + drow, startCol + dcol
+        walls.append((newRow, newCol))
+        app.map[newRow][newCol] = 'w'
+    # Connect walls and paths
+    while len(walls) != 0:
+        # Select random wall
+        (wallRow, wallCol) = random.choice(walls)
+        # Make sure it's in the map
+        if 0 < wallRow < rows-1 and 0 < wallCol < cols-1:
+            # Proceed to check which type of wall it is, then add as corridor
+            # and update new surrounding walls
+            # Right wall
+            if (app.map[wallRow][wallCol-1] == 'c' and 
+                app.map[wallRow][wallCol+1] == 'u'):
+                sCells = getSurroundingCells(app, wallRow, wallCol)
+                if sCells < 2:
+                    app.map[wallRow][wallCol] = 'c'
+                    for (drow, dcol) in [(0, 1), (-1, 0), (1, 0)]:
+                        newRow, newCol = wallRow + drow, wallCol + dcol
+                        if (wallCol != cols-1 or wallRow != rows-1 or 
+                            wallRow !=0):
+                            if app.map[newRow][newCol] != 'c':
+                                app.map[newRow][newCol] == 'w'
+                            if (newRow, newCol) not in walls:
+                                walls.append((newRow, newCol))
+                walls.remove((wallRow, wallCol))
+                continue
+            # Bottom wall
+            if (app.map[wallRow-1][wallCol] == 'c' and 
+                app.map[wallRow+1][wallCol] == 'u'):
+                sCells = getSurroundingCells(app, wallRow, wallCol)
+                if sCells < 2:
+                    app.map[wallRow][wallCol] = 'c'
+                    for (drow, dcol) in [(1, 0), (0, -1), (0, 1)]:
+                        newRow, newCol = wallRow + drow, wallCol + dcol
+                        if (wallRow != rows-1 or wallCol != 0 or 
+                            wallCol != cols-1):
+                            if app.map[newRow][newCol] != 'c':
+                                app.map[newRow][newCol] == 'w'
+                            if (newRow, newCol) not in walls:
+                                walls.append((newRow, newCol))
+                walls.remove((wallRow, wallCol))
+                continue
+            # Upper wall
+            if (app.map[wallRow+1][wallCol] == 'c' and 
+                app.map[wallRow-1][wallCol] == 'u'):
+                sCells = getSurroundingCells(app, wallRow, wallCol)
+                if sCells < 2:
+                    app.map[wallRow][wallCol] = 'c'
+                    for (drow, dcol) in [(0, 1), (0, -1), (-1, 0)]:
+                        newRow, newCol = wallRow + drow, wallCol + dcol
+                        if (wallRow!= 0 or wallCol != 0 or wallCol != cols - 1):
+                            if app.map[newRow][newCol] != 'c':
+                                app.map[newRow][newCol] == 'w'
+                            if (newRow, newCol) not in walls:
+                                walls.append((newRow, newCol))
+                walls.remove((wallRow, wallCol))
+                continue
+            # Left Wall
+            if (app.map[wallRow][wallCol+1] == 'c' and 
+                app.map[wallRow][wallCol-1] == 'u'):
+                sCells = getSurroundingCells(app, wallRow, wallCol)
+                if sCells < 2:
+                    app.map[wallRow][wallCol] = 'c'
+                    for (drow, dcol) in [(1, 0), (0, -1), (-1, 0)]:
+                        newRow, newCol = wallRow + drow, wallCol + dcol
+                        if (wallRow != 0 or wallRow != rows-1 or wallCol != 0):
+                            if app.map[newRow][newCol] != 'c':
+                                app.map[newRow][newCol] == 'w'
+                            if (newRow, newCol) not in walls:
+                                walls.append((newRow, newCol))
+                walls.remove((wallRow, wallCol))
+                continue
+            walls.remove((wallRow, wallCol))
+        else:
+            walls.remove((wallRow, wallCol))
 
-        walls.remove((someRow, someCol))
-    print(app.map)
+    # Add border walls
+    for row in range(rows):
+        for col in range(cols):
+            if app.map[row][col] == 'u':
+                app.map[row][col] = 'w'
+
+    # Create entrance
+    for col in range(0, cols):
+        if app.map[1][col] == 'c':
+            app.map[0][col] = 'c'
+            break
+
+    for col in range(cols-1, 0, -1):
+        if app.map[rows-2][col] == 'c':
+            app.map[rows-1][col] = 'c'
+            break
+    print2dList(app.map)
 
 # Set boundry coordinates
 def setWallCoords(app):
-    for x in range(app.width):
-        app.wallCoords.add((x, 0))
-        app.wallCoords.add((x, app.height))
-    for y in range(app.height):
-        app.wallCoords.add((0, y))
-        app.wallCoords.add((app.width, y))
+    for row in range(len(app.map)):
+        for col in range(len(app.map[0])):
+            if app.map[row][col] == 'w':
+                for x in range(col*100, (col+1)*100):
+                    app.wallCoords.add((x, row*100 + 50))
+                    app.wallCoords.add((x, (row+1)*100 + 50))
+                for y in range(row*100, (row+1)*100):
+                    app.wallCoords.add(( col*100, y + 50))
+                    app.wallCoords.add(( (col+1)*100, y + 50))
+                
 
 def appStarted(app):
     # payer setup
-    app.cx = int(app.width/2)
-    app.cy = int(app.height/2)
+    app.cx = 150
+    app.cy = 100
     app.cr = 15
     app.xr = 20
     app.yr = 10
-    app.angle = 0
+    app.angle = math.pi/2
     app.impactAngle = 0
     app.move = 0.25
     app.xTotalSpeed = 0
@@ -81,7 +189,6 @@ def appStarted(app):
     app.xMomentum = 0
     app.yMomentum = 0
     app.map = []
-    app.visited = set()
     createMap(app)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
@@ -203,11 +310,25 @@ def drawPlayer(app, canvas):
         canvas.create_line(app.cx, app.cy, app.cx+xr, app.cy+yr,
                             width = 2, fill = 'black')
 
+def drawMaze(app, canvas):
+    for row in range(len(app.map)):
+        for col in range(len(app.map[0])):
+            if app.map[row][col] == 'w':
+                color = 'black'
+            if app.map[row][col] == 'c':
+                color = 'green'
+            r = 50
+            cx = col*100 + 50
+            cy = row*100 + 100
+            canvas.create_rectangle(cx-r,cy-r,cx+r,cy+r, fill = color, width=0)
+
 def gameMode_redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
                 text=(f'Watch the dot move! Speed: {str(int(app.speed))}mph'),
                             font = 'Arial 20 bold')
+    drawMaze(app, canvas)
     drawPlayer(app, canvas)
+    
 
 ##########################################
 # Game Over Mode
@@ -292,6 +413,7 @@ def gameOver_redrawAll(app, canvas):
     canvas.create_text(app.width/2, 20,
                 text=(f'Game over! Top speed: {str(int(app.maxSpeed))}mph'),
                 font = 'Arial 20 bold')
+    drawMaze(app, canvas)
     drawPlayer(app, canvas)
 
-runApp(width=1300, height=850)
+runApp(width=1400, height=900)
