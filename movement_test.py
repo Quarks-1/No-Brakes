@@ -199,7 +199,8 @@ def appStarted(app):
     app.timerDelay = 10
     app.shape = 'circle'
     app.playerColor = 'red'
-    app.timeStart = time.time()
+    app.timeStarted = time.time()
+    app.currTime = 0
     app.mode = 'gameMode'
     print('Please be sure to turn off Caps lock!!!')
 
@@ -271,6 +272,7 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
+    app.currTime = int(time.time() - app.timeStarted)
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
     app.xMomentum += (app.move/15)*math.cos(app.angle)
@@ -319,15 +321,17 @@ def drawMaze(app, canvas):
             if app.map[row][col] == 'w':
                 color = 'black'
             if app.map[row][col] == 'c':
-                color = 'green'
+                color = 'lightblue'
             r = 50
             cx = col*100 + 50
             cy = row*100 + 100
             canvas.create_rectangle(cx-r,cy-r,cx+r,cy+r, fill = color, width=0)
 
 def gameMode_redrawAll(app, canvas):
+    text = ((f'Watch the dot move! Speed: {str(int(app.speed))}mph', 
+                                            f'Time: {app.currTime}'))
     canvas.create_text(app.width/2, 20,
-                text=(f'Watch the dot move! Speed: {str(int(app.speed))}mph'),
+    text=text,
                             font = 'Arial 20 bold')
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
