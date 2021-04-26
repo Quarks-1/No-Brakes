@@ -423,4 +423,4 @@ def gameOver_redrawAll(app, canvas):
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
 
-runApp(width=1400, height=900)
+runApp(width=1400, height=750)
