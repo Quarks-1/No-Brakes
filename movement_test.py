@@ -165,11 +165,13 @@ def setWallCoords(app):
         for col in range(len(app.map[0])):
             if app.map[row][col] == 'w':
                 for x in range(col*100, (col+1)*100):
-                    app.wallCoords.add((x, row*100 + 50))
-                    app.wallCoords.add((x, (row+1)*100 + 50))
+                    x -= app.scrollX
+                    app.wallCoords.add((x, row*100))
+                    app.wallCoords.add((x, (row+1)*100))
                 for y in range(row*100, (row+1)*100):
-                    app.wallCoords.add(( col*100, y + 50))
-                    app.wallCoords.add(( (col+1)*100, y + 50))
+                    y-= app.scrollY
+                    app.wallCoords.add(( col*100, y))
+                    app.wallCoords.add(( (col+1)*100, y))
                 
 
 def appStarted(app):
@@ -188,6 +190,8 @@ def appStarted(app):
     app.maxSpeed = 0    ##Measured in mph
     app.xMomentum = 0
     app.yMomentum = 0
+    app.scrollX = 0
+    app.scrollY = 0
     # Map generation
     app.map = []
     createMap(app)
@@ -272,6 +276,7 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
+    # setWallCoords(app)
     app.currTime = int(time.time() - app.timeStarted)
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
@@ -282,6 +287,8 @@ def gameMode_timerFired(app):
     app.yTotalSpeed = (app.yMomentum + moveY)
     app.cx += app.xTotalSpeed
     app.cy += app.yTotalSpeed
+    app.scrollX += app.xTotalSpeed
+    app.scrollY += app.yTotalSpeed
     updateEdge(app)
     app.speed = ((app.xTotalSpeed**2 + app.yTotalSpeed**2)**(1/2))*10
     if app.maxSpeed < app.speed:
@@ -303,17 +310,22 @@ def drawPlayer(app, canvas):
         # top left, bottom right
         xr2 = app.yr*math.sin(app.angle) + app.xr*math.cos(app.angle)
         yr2 = app.yr*math.cos(app.angle) - app.xr*math.sin(app.angle)
-        canvas.create_polygon(app.cx+xr1, app.cy+yr1, app.cx-xr2, app.cy+yr2, 
-                            app.cx-xr1, app.cy-yr1, app.cx+xr2, app.cy-yr2,
+        # Coordinate pairs
+        x1, y1 = app.cx+xr1, app.cy+yr1
+        x2, y2 = app.cx-xr2, app.cy+yr2
+        x3, y3 = app.cx-xr1, app.cy-yr1
+        x4, y4 = app.cx+xr2, app.cy-yr2
+
+        canvas.create_polygon(x1, y1, x2, y2, x3, y3, x4, y4,
                             fill=app.playerColor, outline = 'black', width = 2)
     elif app.shape == 'circle':
         xr = app.cr*math.cos(app.angle)
         yr = app.cr*math.sin(app.angle)
-        canvas.create_oval(app.cx+app.cr, app.cy+app.cr, 
-                            app.cx-app.cr, app.cy-app.cr, 
-                            fill=app.playerColor)
-        canvas.create_line(app.cx, app.cy, app.cx+xr, app.cy+yr,
-                            width = 2, fill = 'black')
+        x1, y1 = app.cx+app.cr, app.cy+app.cr
+        x2, y2 = app.cx-app.cr, app.cy-app.cr
+        canvas.create_oval(x1, y1, x2, y2, fill=app.playerColor)
+        x3, y3 = app.cx+xr, app.cy+yr
+        canvas.create_line(app.cx, app.cy, x3, y3, width = 2, fill = 'black')
 
 def drawMaze(app, canvas):
     for row in range(len(app.map)):
@@ -324,17 +336,20 @@ def drawMaze(app, canvas):
                 color = 'lightblue'
             r = 50
             cx = col*100 + 50
-            cy = row*100 + 100
-            canvas.create_rectangle(cx-r,cy-r,cx+r,cy+r, fill = color, width=0)
+            cy = row*100 + 50
+            # cx -= app.scrollX
+            # cy -= app.scrollY
+            x1, y1, x2, y2 = cx-r,cy-r,cx+r,cy+r
+            canvas.create_rectangle(x1, y1, x2, y2, fill = color, width=0)
 
 def gameMode_redrawAll(app, canvas):
-    text = ((f'Watch the dot move! Speed: {str(int(app.speed))}mph', 
-                                            f'Time: {app.currTime}'))
-    canvas.create_text(app.width/2, 20,
-    text=text,
-                            font = 'Arial 20 bold')
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
+    text = ((f'Watch the dot move! Speed: {str(int(app.speed))}mph', 
+                                            f'Time: {app.currTime}'))
+    canvas.create_text(app.width/2, 20, text=text, font = 'Arial 20 bold',
+                        fill = 'white')
+    
     
 
 ##########################################
