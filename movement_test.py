@@ -6,9 +6,6 @@ import math, time, random
 # within four ranges have cases for hitting forwards or backwards
 ##########################################
 
-##########################################
-# Game mode
-##########################################
 
 ######################################################################
 # From: https://www.cs.cmu.edu/~112/notes/notes-2d-lists.html#printing
@@ -44,6 +41,97 @@ def print2dList(a):
     print(']')
 ######################################################################
 
+##########################################
+# Player Selection Mode
+##########################################
+
+def playerSelect_mouseMoved(app, event):
+    x1, y1 = app.b1x - app.br - 20, app.b1y - app.br - 20
+    x2, y2 = app.b1x + app.br, app.b1y + app.br
+    x3, y3 = app.b2x - app.br - 20, app.b2y - app.br - 20
+    x4, y4 = app.b2x + app.br, app.b2y + app.br
+    if x1 < event.x < x2 and y1 < event.y < y2: #Circle button
+        app.hovering = 'circle'
+    elif x3 < event.x < x4 and y3 < event.y < y4: #Rectangle button
+        app.hovering = 'rectangle'
+    else:
+        app.hovering = ''
+
+def playerSelect_mousePressed(app, event):
+    x1, y1 = app.b1x - app.br - 20, app.b1y - app.br - 20
+    x2, y2 = app.b1x + app.br, app.b1y + app.br
+    x3, y3 = app.b2x - app.br - 20, app.b2y - app.br - 20
+    x4, y4 = app.b2x + app.br, app.b2y + app.br
+    if x1 < event.x < x2 and y1 < event.y < y2: #Circle button
+        app.shape = 'circle'
+        app.selected = app.shape
+        app.b1Color = 'firebrick'
+        app.b2Color = 'green'
+    if x3 < event.x < x4 and y3 < event.y < y4: #Rectangle button
+        app.shape = 'rectangle'
+        app.selected = app.shape
+        app.b1Color = 'red'
+        app.b2Color = 'darkGreen'
+
+
+def drawButtons(app, canvas):
+    # Circle button
+    offset = 10
+    if app.selected == 'circle':
+        x1, y1 = app.b1x - app.br, app.b1y - app.br
+        x2, y2 = app.b1x + app.br, app.b1y + app.br
+        canvas.create_rectangle(x1, y1, x2, y2, fill = app.b1Color, width = 1)
+    else:
+        x1, y1 = app.b1x - app.br, app.b1y - app.br
+        x2, y2 = app.b1x + app.br, app.b1y + app.br
+        canvas.create_rectangle(x1, y1, x2, y2, fill = 'lightcoral', width = 0)
+        x1 -= offset
+        x2 -= offset
+        y1 -= offset
+        y2 -= offset
+        canvas.create_rectangle(x1, y1, x2, y2, fill = app.b1Color, 
+                                width = app.hoverWidth1)
+    # Rectangle button
+    if app.selected == 'rectangle':
+        x3, y3 = app.b2x - app.br, app.b2y - app.br
+        x4, y4 = app.b2x + app.br, app.b2y + app.br
+        canvas.create_rectangle(x3, y3, x4, y4, fill = app.b2Color, width = 1)
+    else:
+        x3, y3 = app.b2x - app.br, app.b2y - app.br
+        x4, y4 = app.b2x + app.br, app.b2y + app.br
+        canvas.create_rectangle(x3, y3, x4, y4, fill = 'lime', width = 0)
+        x3 -= offset
+        x4 -= offset
+        y3 -= offset
+        y4 -= offset
+        canvas.create_rectangle(x3, y3, x4, y4, fill = app.b2Color, 
+                                width = app.hoverWidth2)
+
+def drawChoices(app, canvas):
+    pass
+
+def playerSelect_redrawAll(app, canvas):
+    drawButtons(app, canvas)
+    drawChoices(app, canvas)
+
+def playerSelect_timerFired(app):
+    currTime = time.time() - app.timeStarted
+    if currTime > 1:
+        if app.hovering == 'circle':
+            if 0 <= app.hoverWidth1 <= 4:
+                app.hoverWidth1 += 1
+            else:
+                app.hoverWidth1 = 1
+        if app.hovering == 'rectangle':
+            if 0 <= app.hoverWidth2 <= 4:
+                app.hoverWidth2 += 1
+            else:
+                app.hoverWidth2 = 1
+        currTime = time.time()
+
+##########################################
+# Game mode
+##########################################
 
 def getSurroundingCells(app, row, col):
     count = 0
@@ -157,7 +245,6 @@ def createMap(app):
         if app.map[rows-2][col] == 'c':
             app.map[rows-1][col] = 'c'
             break
-    print2dList(app.map)
 
 # Set boundry coordinates
 def setWallCoords(app):
@@ -175,6 +262,26 @@ def setWallCoords(app):
                 
 
 def appStarted(app):
+    ##########################
+    # Player Selection Variables
+    ##########################
+    app.b1x = 250
+    app.b1y = 700
+    app.b2x = 650
+    app.b2y = app.b1y
+    app.br = 100
+    app.mouseX = 0
+    app.mouseY = 0
+    app.selected = ''
+    app.b1Color = 'red'
+    app.b2Color = 'green'
+    app.selectBorderInr = 0
+    app.hoverWidth1 = 1
+    app.hoverWidth2 = 1
+    app.hovering = ''
+    ##########################
+    # Game Variables
+    ##########################
     # payer setup
     app.cx = 150
     app.cy = 100
@@ -205,7 +312,7 @@ def appStarted(app):
     app.playerColor = 'red'
     app.timeStarted = time.time()
     app.currTime = 0
-    app.mode = 'gameMode'
+    app.mode = 'playerSelect'
     print('Please be sure to turn off Caps lock!!!')
 
 def gameMode_mousePressed(app, event):
