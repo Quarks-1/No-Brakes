@@ -356,7 +356,6 @@ def setWallCoords(app):
 def updateWallCoords(app):
     newWall = set()
     for (x, y) in app.wallCoords:
-        print(x, y)
         newX = x - app.scrollX
         newY = y - app.scrollY
         newWall.add((newX, newY))
@@ -493,7 +492,7 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
-    updateWallCoords(app)
+    # updateWallCoords(app)
     app.currTime = int(time.time() - app.timeStarted)
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
@@ -532,7 +531,6 @@ def drawPlayer(app, canvas):
         x2, y2 = app.cx-xr2, app.cy+yr2
         x3, y3 = app.cx-xr1, app.cy-yr1
         x4, y4 = app.cx+xr2, app.cy-yr2
-
         canvas.create_polygon(x1, y1, x2, y2, x3, y3, x4, y4,
                             fill=app.playerColor, outline = 'black', width = 2)
     elif app.shape == 'circle':
@@ -566,7 +564,6 @@ def gameMode_redrawAll(app, canvas):
                                             f'Time: {app.currTime}'))
     canvas.create_text(app.width/2, 20, text=text, font = 'Arial 20 bold',
                         fill = 'white')
-    
     
 
 ##########################################
