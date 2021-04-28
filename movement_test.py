@@ -66,7 +66,6 @@ def playerSelect_mouseMoved(app, event):
         app.hovering = ''
         app.hoverWidth1, app.hoverWidth2, app.hoverWidth3 = 1, 1, 1
         app.hoverWidth4 = 1
-    print(event.x, event.y)
 
 def playerSelect_mousePressed(app, event):
     x1, y1 = app.b1x - app.br - 20, app.b1y - app.br - 20
@@ -348,14 +347,20 @@ def setWallCoords(app):
         for col in range(len(app.map[0])):
             if app.map[row][col] == 'w':
                 for x in range(col*100, (col+1)*100):
-                    x -= app.scrollX
                     app.wallCoords.add((x, row*100))
                     app.wallCoords.add((x, (row+1)*100))
                 for y in range(row*100, (row+1)*100):
-                    y-= app.scrollY
                     app.wallCoords.add(( col*100, y))
                     app.wallCoords.add(( (col+1)*100, y))
                 
+def updateWallCoords(app):
+    newWall = set()
+    for (x, y) in app.wallCoords:
+        print(x, y)
+        newX = x - app.scrollX
+        newY = y - app.scrollY
+        newWall.add((newX, newY))
+    app.wallCoords = newWall
 
 def appStarted(app):
     ##########################
@@ -488,7 +493,7 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
-    # setWallCoords(app)
+    updateWallCoords(app)
     app.currTime = int(time.time() - app.timeStarted)
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
@@ -549,8 +554,8 @@ def drawMaze(app, canvas):
             r = 50
             cx = col*100 + 50
             cy = row*100 + 50
-            # cx -= app.scrollX
-            # cy -= app.scrollY
+            cx -= app.scrollX
+            cy -= app.scrollY
             x1, y1, x2, y2 = cx-r,cy-r,cx+r,cy+r
             canvas.create_rectangle(x1, y1, x2, y2, fill = color, width=0)
 
