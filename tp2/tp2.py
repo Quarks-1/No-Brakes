@@ -72,29 +72,36 @@ def setWallCoords(app):
                             app.wallCoords.add(((col+1)*r, y))
                             # app.wallDirs[direction].append(((col+1)*r, y))
                     if direction == 'left':
-                        for y in range(row*r, (row+1)*r,incr):  
+                        for y in range(row*r, (row+1)*r,incr): 
                             app.wallCoords.add(((col)*r, y))
                             # app.wallDirs[direction].append(((col)*r, y))
                     if direction == 'down':
                         for x in range(col*r, (col+1)*r,incr):
                             app.wallCoords.add((x, (row+1)*r))
                             # app.wallDirs[direction].append((x, (row+1)*r))
-                
+    tempWall = set()
+    for (x, y) in app.wallCoords:
+        newX = x + app.width/2
+        newY = y + app.height/2
+        tempWall.add((x, y))
+    app.wallCoords = tempWall
+
 def updateWallCoords(app):
     newWall = set()
     for (x, y) in app.wallCoords:
-        newX = x - app.scrollX
-        newY = y - app.scrollY
+        newX = x - app.scrollXtot
+        newY = y - app.scrollYtot
         newWall.add((newX, newY))
-    print(newWall == app.wallCoords)
-    app.wallCoords = newWall
+    app.actualWallCoords = newWall
+    print(app.actualWallCoords.intersection(app.edgeCoords))
     
     # print(app.wallDirs)
 
 def setPlayerLocation(app):
     for col in range(len(app.map[0])):
         if app.map[0][col] == 'c':
-            app.cx = col*300
+            app.cx += col*300
+    app.cy += 50
 
 def appStarted(app):
     ##########################
@@ -125,8 +132,8 @@ def appStarted(app):
     # Game Variables
     ##########################
     # payer setup
-    app.cx = 150
-    app.cy = 100
+    app.cx = app.width/2
+    app.cy = app.height/2
     app.cr = 15
     app.xr = 20
     app.yr = 10
@@ -151,13 +158,14 @@ def appStarted(app):
     createMap(app)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
+    app.actualWallCoords = set()
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
     setWallCoords(app)
     setPlayerLocation(app)
     # Other
     app.moveIncr = 0
     app.timerDelay = 10
-    app.shape = 'circle'
+    app.shape = 'reactangle'
     app.playerColor = 'red'
     app.timeStarted = time.time()
     app.currTime = 0
@@ -244,10 +252,10 @@ def gameMode_timerFired(app):
     app.yTotalSpeed = (app.yMomentum + moveY)
     app.cx += app.xTotalSpeed
     app.cy += app.yTotalSpeed
-    app.scrollX = app.xTotalSpeed
-    app.scrollY = app.yTotalSpeed
-    app.scrollXtot += app.scrollX
-    app.scrollYtot += app.scrollY
+    # app.scrollX = app.xTotalSpeed
+    # app.scrollY = app.yTotalSpeed
+    # app.scrollXtot += app.scrollX
+    # app.scrollYtot += app.scrollY
     updateEdge(app)
     updateWallCoords(app)
     app.speed = ((app.xTotalSpeed**2 + app.yTotalSpeed**2)**(1/2))*10
@@ -294,10 +302,12 @@ def drawMaze(app, canvas):
             if app.map[row][col] == 'c':
                 color = 'lightblue'
             r = 200
-            cx = col*200  + r
-            cy = row*200  + r
-            cx -= app.scrollXtot
-            cy -= app.scrollYtot
+            cx = col*200  
+            cy = row*200  
+            cx -= app.scrollXtot 
+            cx += app.width/2
+            cy -= app.scrollYtot 
+            cy += app.height/2
             x1, y1, x2, y2 = cx-r,cy-r,cx+r,cy+r
             canvas.create_rectangle(x1, y1, x2, y2, fill = color, width=0)
 
