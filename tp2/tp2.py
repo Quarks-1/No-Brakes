@@ -82,8 +82,7 @@ def updateWallCoords(app):
         newX = x - app.scrollXtot
         newY = y - app.scrollYtot
         newWall.add((newX, newY))
-    app.actualWallCoords = newWall
-    
+    app.actualWallCoords = newWall   
 
 def setPlayerLocation(app):
     for col in range(len(app.map[0])):
@@ -92,8 +91,7 @@ def setPlayerLocation(app):
     app.cy = 50
 
 def checkForWin(app):
-    row = int(app.cy//100)
-    col = int(app.cx//100)
+    row, col = getPlayerCell(app)
     if app.map[row][col] == 'f':
         createNewStage(app)
 
@@ -155,6 +153,7 @@ def appStarted(app):
     app.playerCell = tuple()
     # Enemy AI setup
     app.enemyAI = False
+    app.enemyMoves = []
     # Map generation
     app.map = []
     createMap(app)
@@ -245,10 +244,12 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
+    currTime = int(time.time() - app.timeStarted)
     checkForWin(app)
     rotatePlayer(app)
-    moveAI(app)
-    app.currTime = int(time.time() - app.timeStarted)
+    if app.enemyAI and currTime > 1:    #Move enemy once per second
+        moveAI(app)
+        app.timeStarted = int(time.time())
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
     app.xMomentum += (app.move/15)*math.cos(app.angle)
@@ -258,10 +259,7 @@ def gameMode_timerFired(app):
     app.yTotalSpeed = (app.yMomentum + moveY)
     app.cx += app.xTotalSpeed
     app.cy += app.yTotalSpeed
-    # app.scrollX += app.xTotalSpeed
-    # app.scrollY += app.yTotalSpeed
     updateEdge(app)
-    # updateWallCoords(app)
     app.speed = ((app.xTotalSpeed**2 + app.yTotalSpeed**2)**(1/2))*10
     if app.maxSpeed < app.speed:
         app.maxSpeed = app.speed
@@ -309,11 +307,11 @@ def drawMaze(app, canvas):
                 color = 'salmon'
             if app.map[row][col] == 'f':
                 color = 'lightgreen'
+            if app.map[row][col] == 'AI':
+                color = 'darkviolet'
             r = 50
             cx = col*100 + r
             cy = row*100 + r
-            # cx -= app.scrollX
-            # cy -= app.scrollY
             canvas.create_rectangle(cx-r,cy-r,cx+r,cy+r, fill = color, width=0)
 
 def gameMode_redrawAll(app, canvas):
