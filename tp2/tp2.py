@@ -43,7 +43,7 @@ def print2dList(a):
 ##########################################
 
 def getCorridorDirs(app, row, col):
-    directions = ['up', 'right', 'left', 'down']
+    directions = ['down', 'right', 'left', 'up']
     foundDirections = []
     count = 0
     for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
@@ -60,31 +60,22 @@ def setWallCoords(app):
         for col in range(len(app.map[0])):
             if app.map[row][col] == 'w':
                 directions = getCorridorDirs(app, row, col)
+                print(directions, row, col)
                 for direction in directions:
-                    r = 200
+                    r = 100
                     incr = 3
                     if direction == 'up':
                         for x in range(col*r, (col+1)*r,incr):
                             app.wallCoords.add((x, row*r))
-                            # app.wallDirs[direction].append((x, row*r))
                     if direction == 'right':
                         for y in range(row*r, (row+1)*r,incr): 
                             app.wallCoords.add(((col+1)*r, y))
-                            # app.wallDirs[direction].append(((col+1)*r, y))
                     if direction == 'left':
-                        for y in range(row*r, (row+1)*r,incr): 
+                        for y in range(row*r, (row+1)*r,incr):
                             app.wallCoords.add(((col)*r, y))
-                            # app.wallDirs[direction].append(((col)*r, y))
                     if direction == 'down':
                         for x in range(col*r, (col+1)*r,incr):
                             app.wallCoords.add((x, (row+1)*r))
-                            # app.wallDirs[direction].append((x, (row+1)*r))
-    tempWall = set()
-    for (x, y) in app.wallCoords:
-        newX = x + app.width/2
-        newY = y + app.height/2
-        tempWall.add((x, y))
-    app.wallCoords = tempWall
 
 def updateWallCoords(app):
     newWall = set()
@@ -95,13 +86,13 @@ def updateWallCoords(app):
     app.actualWallCoords = newWall
     print(app.actualWallCoords.intersection(app.edgeCoords))
     
-    # print(app.wallDirs)
 
 def setPlayerLocation(app):
     for col in range(len(app.map[0])):
         if app.map[0][col] == 'c':
-            app.cx += col*300
+            app.cx = col*100 + 50
     app.cy += 50
+    
 
 def appStarted(app):
     ##########################
@@ -132,8 +123,8 @@ def appStarted(app):
     # Game Variables
     ##########################
     # payer setup
-    app.cx = app.width/2
-    app.cy = app.height/2
+    app.cx = 0
+    app.cy = 0 
     app.cr = 15
     app.xr = 20
     app.yr = 10
@@ -174,8 +165,6 @@ def appStarted(app):
 
 def gameMode_mousePressed(app, event):
     print(event.x, event.y)
-    if (event.x, event.y) in app.edgeCoords:
-        print('It works')
 
 def gameMode_keyPressed(app, event):
     # app.isTurning = True
@@ -252,12 +241,10 @@ def gameMode_timerFired(app):
     app.yTotalSpeed = (app.yMomentum + moveY)
     app.cx += app.xTotalSpeed
     app.cy += app.yTotalSpeed
-    # app.scrollX = app.xTotalSpeed
-    # app.scrollY = app.yTotalSpeed
-    # app.scrollXtot += app.scrollX
-    # app.scrollYtot += app.scrollY
+    # app.scrollX += app.xTotalSpeed
+    # app.scrollY += app.yTotalSpeed
     updateEdge(app)
-    updateWallCoords(app)
+    # updateWallCoords(app)
     app.speed = ((app.xTotalSpeed**2 + app.yTotalSpeed**2)**(1/2))*10
     if app.maxSpeed < app.speed:
         app.maxSpeed = app.speed
@@ -301,19 +288,14 @@ def drawMaze(app, canvas):
                 color = 'black'
             if app.map[row][col] == 'c':
                 color = 'lightblue'
-            r = 200
-            cx = col*200  
-            cy = row*200  
-            cx -= app.scrollXtot 
-            cx += app.width/2
-            cy -= app.scrollYtot 
-            cy += app.height/2
-            x1, y1, x2, y2 = cx-r,cy-r,cx+r,cy+r
-            canvas.create_rectangle(x1, y1, x2, y2, fill = color, width=0)
+            r = 50
+            cx = col*100 + r
+            cy = row*100 + r
+            # cx -= app.scrollX
+            # cy -= app.scrollY
+            canvas.create_rectangle(cx-r,cy-r,cx+r,cy+r, fill = color, width=0)
 
 def gameMode_redrawAll(app, canvas):
-    canvas.create_rectangle(-app.width, -app.height, app.width, app.height, 
-                            fill = 'black')
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
     text = ((f'Watch the dot move! Speed: {str(int(app.speed))}mph', 
@@ -325,6 +307,9 @@ def gameMode_redrawAll(app, canvas):
 ##########################################
 # Game Over Mode
 ##########################################
+
+def gameOver_mousePressed(app, event):
+    print(event.x, event.y)
 
 def gameOver_keyPressed(app, event):
     if event.key == 'u':
@@ -409,6 +394,6 @@ def gameOver_redrawAll(app, canvas):
                 font = 'Arial 20 bold', fill = 'white')
     
 
-runApp(width=1400, height=850)
+runApp(width=1400, height=900)
 
 

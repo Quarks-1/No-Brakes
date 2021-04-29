@@ -319,8 +319,8 @@ def gameMode_timerFired(app):
     momentumCalc(app)      # This adjusts for sharp turns
     app.xTotalSpeed = (app.xMomentum + moveX)
     app.yTotalSpeed = (app.yMomentum + moveY)
-    app.cx += app.xTotalSpeed
-    app.cy += app.yTotalSpeed
+    # app.cx += app.xTotalSpeed
+    # app.cy += app.yTotalSpeed
     app.scrollX += app.xTotalSpeed
     app.scrollY += app.yTotalSpeed
     updateEdge(app)
