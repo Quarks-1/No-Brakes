@@ -105,10 +105,10 @@ def createMap(app):
     # Create entrance
     for col in range(0, cols):
         if app.map[1][col] == 'c':
-            app.map[0][col] = 'c'
+            app.map[0][col] = 's'
             break
 
     for col in range(cols-1, 0, -1):
         if app.map[rows-2][col] == 'c':
-            app.map[rows-1][col] = 'c'
+            app.map[rows-1][col] = 'f'
             break

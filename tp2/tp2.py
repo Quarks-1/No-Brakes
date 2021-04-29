@@ -49,7 +49,7 @@ def getCorridorDirs(app, row, col):
     for (drow, dcol) in [(1, 0), (0, 1), (0, -1), (-1, 0)]:
         newRow, newCol = row + drow, col + dcol
         if 0 <= newRow < len(app.map) and 0 <= newCol < len(app.map[0]):
-            if app.map[newRow][newCol] == 'c':
+            if app.map[newRow][newCol] in ['c', 's', 'f']:
                 foundDirections.append(directions[count])
         count += 1
     return foundDirections
@@ -60,7 +60,6 @@ def setWallCoords(app):
         for col in range(len(app.map[0])):
             if app.map[row][col] == 'w':
                 directions = getCorridorDirs(app, row, col)
-                print(directions, row, col)
                 for direction in directions:
                     r = 100
                     incr = 3
@@ -84,15 +83,27 @@ def updateWallCoords(app):
         newY = y - app.scrollYtot
         newWall.add((newX, newY))
     app.actualWallCoords = newWall
-    print(app.actualWallCoords.intersection(app.edgeCoords))
     
 
 def setPlayerLocation(app):
     for col in range(len(app.map[0])):
-        if app.map[0][col] == 'c':
+        if app.map[0][col] == 's':
             app.cx = col*100 + 50
-    app.cy += 50
-    
+    app.cy = 50
+
+def checkForWin(app):
+    row = int(app.cy//100)
+    col = int(app.cx//100)
+    if app.map[row][col] == 'f':
+        createNewStage(app)
+
+def createNewStage(app):
+    app.map = []
+    createMap(app)
+    app.edgeCoords = set()  #Coordinates of player border
+    app.wallCoords = set()  #Coordinates of level borders
+    setWallCoords(app)
+    setPlayerLocation(app)
 
 def appStarted(app):
     ##########################
@@ -122,7 +133,7 @@ def appStarted(app):
     ##########################
     # Game Variables
     ##########################
-    # payer setup
+    # player setup
     app.cx = 0
     app.cy = 0 
     app.cr = 15
@@ -141,7 +152,7 @@ def appStarted(app):
     app.scrollY = 0
     app.scrollXtot = 0
     app.scrollYtot = 0
-    # app.isTurning = False
+    app.playerCell = tuple()
     # Enemy AI setup
     app.enemyAI = False
     # Map generation
@@ -149,7 +160,7 @@ def appStarted(app):
     createMap(app)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
-    app.actualWallCoords = set()
+    # app.actualWallCoords = set()
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
     setWallCoords(app)
     setPlayerLocation(app)
@@ -161,27 +172,31 @@ def appStarted(app):
     app.timeStarted = time.time()
     app.currTime = 0
     app.mode = 'playerSelect'
+    app.input = ''
     print('Please be sure to turn off Caps lock!!!')
 
 def gameMode_mousePressed(app, event):
     print(event.x, event.y)
 
 def gameMode_keyPressed(app, event):
-    # app.isTurning = True
-    # while app.isTurning:
-    if event.key == 'Right':
-        app.angle += 0.1
-    if event.key == 'Left':
-        app.angle -= 0.1
-    if event.key == "c":
+    app.input = event.key
+
+def gameMode_keyReleased(app, event):
+    app.input = ''
+
+def rotatePlayer(app):
+    if app.input == 'Right':
+        app.angle += 0.085
+    if app.input == 'Left':
+        app.angle -= 0.085
+    if app.input == "c":
         app.shape = 'circle'
-    if event.key == 'r':
+    if app.input == 'r':
         app.shape = 'rectangle'
-    if event.key == 'u':
+    if app.input == 'u':
         appStarted(app)
     if app.angle > 2*math.pi or app.angle < -2*math.pi:
         app.angle = 0
-
 
 def updateEdge(app):
     app.edgeCoords = set()
@@ -205,7 +220,6 @@ def updateEdge(app):
             yr = x*math.sin(app.angle) + y*math.cos(app.angle)
             # Add to actual edge coordinate list
             app.edgeCoords.add((int(app.cx + xr), int(app.cy + yr)))
-
 
 def checkLevel(app):
     if 0 < app.maxSpeed < 25:
@@ -231,6 +245,9 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
+    checkForWin(app)
+    rotatePlayer(app)
+    moveAI(app)
     app.currTime = int(time.time() - app.timeStarted)
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
@@ -288,6 +305,10 @@ def drawMaze(app, canvas):
                 color = 'black'
             if app.map[row][col] == 'c':
                 color = 'lightblue'
+            if app.map[row][col] == 's':
+                color = 'salmon'
+            if app.map[row][col] == 'f':
+                color = 'lightgreen'
             r = 50
             cx = col*100 + r
             cy = row*100 + r
