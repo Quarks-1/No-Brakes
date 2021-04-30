@@ -181,7 +181,6 @@ def appStarted(app):
     print2dList(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
-    # app.actualWallCoords = set()
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
     setWallCoords(app)
     setPlayerLocation(app)
@@ -189,7 +188,6 @@ def appStarted(app):
     app.enemyAI = False
     app.enemyMoves = []
     app.rowAI, app.colAI = chooseStart(app)
-    print(app.rowAI, app.colAI)
     # Other
     app.moveIncr = 0
     app.timerDelay = 10
@@ -434,6 +432,10 @@ def collide(app):
                 yDir = -1
             if dirs == 'down':
                 yDir = -1
+            if dirs == 'up' and app.shape == 'circle':
+                xDir = 1
+            if dirs == 'down' and app.shape == 'circle':
+                xDir = 1
             
     app.cx += (steps[app.moveIncr]*math.cos(app.impactAngle))*xDir
     app.cy += (steps[app.moveIncr]*math.sin(app.impactAngle))*yDir
