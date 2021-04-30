@@ -2,7 +2,6 @@ import random, math, copy
 
 def moveAI(app):
     AIpath = dijkstra(app)
-    # print(AIpath)
     app.rowAI, app.colAI = AIpath[0]
     app.enemyMoves.append((app.rowAI, app.colAI))
     app.map[app.rowAI][app.colAI] = 'AI'
@@ -34,14 +33,12 @@ def surroundingCells(app, P, row, col, visited):
             L.append((newRow, newCol))
     # if len(L) == 0:
     #     L.append((-1,0))
-    print(L, 'dis L')
     return L
 
 def getDist(row, col, endRow, endCol):
     return (abs(endRow-row)**2 + abs(endCol - col)**2)**(1/2)
 
 def dijkstra(app):
-    print('entered')
     startRow, startCol = app.rowAI, app.colAI
     # print(startRow, startCol)
     endRow, endCol = getPlayerCell(app)
@@ -59,7 +56,6 @@ def dijkstra(app):
                 currRow, currCol = row, col
                 h = currH
         path.append((currRow, currCol))
-        # print(visited, unvisited, 'too', currRow, currCol)
         unvisited = []
         if (currRow, currCol) != (endRow, endCol):
             unvisited = surroundingCells(app, unvisited, currRow, currCol, visited)

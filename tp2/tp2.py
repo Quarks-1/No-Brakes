@@ -2,7 +2,8 @@ from cmu_112_graphics import *
 from PlayerSelection import *
 from MazeGenerator import *
 from DijkstraSearch import *
-import math, time, random
+from StartScreen import *
+import math, time, random, os
 
 ############## THINGS TO DO ##############
 # adjust cases for top and bottom collision (maybe revamp system idk)
@@ -109,6 +110,23 @@ def createNewStage(app):
 
 def appStarted(app):
     ##########################
+    # Start Screen Variables
+    ##########################
+    app.sb1x = app.width/2
+    app.sb1y = 350
+    app.sb2x = app.sb1x
+    app.sb2y = app.sb1y + 200
+    app.sb3x = app.sb1x
+    app.sb3y = app.sb2y + 200
+    app.sbrx = 300
+    app.sbry = 75
+    app.sHovering = ''
+    app.sHoverWidth1, app.sHoverWidth2, app.sHoverWidth3 = 1,1,1
+    app.startSpritey = app.height/2
+    app.startSpritex2 = 175
+    app.startSpritex1 = app.width - 175
+    app.incr = 10
+    ##########################
     # Player Selection Variables
     ##########################
     app.b1x = 250
@@ -180,7 +198,7 @@ def appStarted(app):
     app.timeStarted = time.time()
     app.time0 = time.time()
     app.timeElapsed = 0
-    app.mode = 'playerSelect'
+    app.mode = 'startScreen'
     app.input = ''
     print('Please be sure to turn off Caps lock!!!')
 
@@ -437,6 +455,9 @@ def gameOver_redrawAll(app, canvas):
                 text=(f'Game over! Top speed: {str(int(app.maxSpeed))}mph'),
                 font = 'Arial 20 bold', fill = 'white')
     
+
+def quit_timerFired(app):
+    os._exit(0)
 
 runApp(width=1400, height=900)
 
