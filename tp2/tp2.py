@@ -2,6 +2,7 @@ from cmu_112_graphics import *
 from PlayerSelection import *
 from MazeGenerator import *
 from DijkstraSearch import *
+# from DFS import *
 import math, time, random
 
 ############## THINGS TO DO ##############
@@ -62,19 +63,23 @@ def setWallCoords(app):
                 directions = getCorridorDirs(app, row, col)
                 for direction in directions:
                     r = 100
-                    incr = 3
+                    incr = 2
                     if direction == 'up':
                         for x in range(col*r, (col+1)*r,incr):
                             app.wallCoords.add((x, row*r))
+                            app.wallDirs[direction].append((x, row*r))
                     if direction == 'right':
                         for y in range(row*r, (row+1)*r,incr): 
                             app.wallCoords.add(((col+1)*r, y))
+                            app.wallDirs[direction].append(((col+1)*r, y))
                     if direction == 'left':
-                        for y in range(row*r, (row+1)*r,incr):
+                        for y in range(row*r, (row+1)*r,incr):  
                             app.wallCoords.add(((col)*r, y))
+                            app.wallDirs[direction].append(((col)*r, y))
                     if direction == 'down':
                         for x in range(col*r, (col+1)*r,incr):
                             app.wallCoords.add((x, (row+1)*r))
+                            app.wallDirs[direction].append((x, (row+1)*r))
 
 def updateWallCoords(app):
     newWall = set()
@@ -151,25 +156,31 @@ def appStarted(app):
     app.scrollXtot = 0
     app.scrollYtot = 0
     app.playerCell = tuple()
-    # Enemy AI setup
-    app.enemyAI = False
-    app.enemyMoves = []
+    app.impactx = 0
+    app.impacty = 0
     # Map generation
     app.map = []
     createMap(app)
+    print2dList(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     # app.actualWallCoords = set()
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
     setWallCoords(app)
     setPlayerLocation(app)
+    # Enemy AI setup
+    app.enemyAI = False
+    app.enemyMoves = []
+    app.rowAI, app.colAI = chooseStart(app)
+    print(app.rowAI, app.colAI)
     # Other
     app.moveIncr = 0
     app.timerDelay = 10
     app.shape = 'reactangle'
     app.playerColor = 'red'
     app.timeStarted = time.time()
-    app.currTime = 0
+    app.time0 = time.time()
+    app.timeElapsed = 0
     app.mode = 'playerSelect'
     app.input = ''
     print('Please be sure to turn off Caps lock!!!')
@@ -244,12 +255,16 @@ def momentumCalc(app):
 
 def gameMode_timerFired(app):
     # Movement
+    app.timeElapsed = int(time.time() - app.time0)
     currTime = int(time.time() - app.timeStarted)
     checkForWin(app)
     rotatePlayer(app)
-    if app.enemyAI and currTime > 1:    #Move enemy once per second
+    if app.enemyAI and currTime > 2:    #Move enemy once per second
         moveAI(app)
         app.timeStarted = int(time.time())
+        prow, pcol = getPlayerCell(app)
+        if app.rowAI == prow and app.colAI == pcol:
+            app.mode = 'gameOver'
     moveX = app.move*math.cos(app.angle)
     moveY = app.move*math.sin(app.angle)
     app.xMomentum += (app.move/15)*math.cos(app.angle)
@@ -267,6 +282,10 @@ def gameMode_timerFired(app):
 
     # Collision detection
     if app.wallCoords.intersection(app.edgeCoords) != set():
+        impactSet = app.wallCoords.intersection(app.edgeCoords)
+        impactSet = list(impactSet)
+        app.impactx = impactSet[0][0]
+        app.impacty = impactSet[0][1]
         app.mode = 'gameOver'
         app.impactAngle = app.angle
         print(app.impactAngle)
@@ -318,7 +337,7 @@ def gameMode_redrawAll(app, canvas):
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
     text = ((f'Watch the dot move! Speed: {str(int(app.speed))}mph', 
-                                            f'Time: {app.currTime}'))
+                                            f'Time: {app.timeElapsed}'))
     canvas.create_text(app.width/2, 20, text=text, font = 'Arial 20 bold',
                         fill = 'white')
     
@@ -392,6 +411,13 @@ def collide(app):
                 yDir = 1
                 angleDir = -1
             angleChange(app, steps, -app.impactAngle)
+    for dirs in app.wallDirs:
+        if (app.impactx, app.impacty) in app.wallDirs[dirs]:
+            if dirs == 'up':
+                yDir = -1
+            if dirs == 'down':
+                yDir = -1
+            
     app.cx += (steps[app.moveIncr]*math.cos(app.impactAngle))*xDir
     app.cy += (steps[app.moveIncr]*math.sin(app.impactAngle))*yDir
     angleChange(app, steps, app.impactAngle*angleDir)

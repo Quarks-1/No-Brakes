@@ -102,12 +102,12 @@ def createMap(app):
             if app.map[row][col] == 'u':
                 app.map[row][col] = 'w'
 
-    # Create entrance
+    # Create start
     for col in range(0, cols):
         if app.map[1][col] == 'c':
             app.map[0][col] = 's'
             break
-
+    # Create finish line
     for col in range(cols-1, 0, -1):
         if app.map[rows-2][col] == 'c':
             app.map[rows-1][col] = 'f'
