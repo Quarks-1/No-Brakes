@@ -2,7 +2,6 @@ from cmu_112_graphics import *
 from PlayerSelection import *
 from MazeGenerator import *
 from DijkstraSearch import *
-# from DFS import *
 import math, time, random
 
 ############## THINGS TO DO ##############
