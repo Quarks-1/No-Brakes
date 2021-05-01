@@ -178,7 +178,6 @@ def appStarted(app):
     # Map generation
     app.map = []
     createMap(app)
-    print2dList(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
