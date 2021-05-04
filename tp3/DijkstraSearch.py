@@ -2,7 +2,10 @@ import random, math, copy
 
 def moveAI(app):
     AIpath = dijkstra(app)
-    app.rowAI, app.colAI = AIpath[0]
+    if (app.rowAI, app.colAI) == AIpath[0]:
+        app.colAI -= 1
+    else:
+        app.rowAI, app.colAI = AIpath[0]
     app.enemyMoves.append((app.rowAI, app.colAI))
     app.map[app.rowAI][app.colAI] = 'AI'
     if len(app.enemyMoves) > 1:
@@ -31,8 +34,6 @@ def surroundingCells(app, P, row, col, visited):
         newRow, newCol = row + drow, col + dcol
         if app.map[newRow][newCol] == 'c' and (newRow, newCol) not in visited:
             L.append((newRow, newCol))
-    # if len(L) == 0:
-    #     L.append((-1,0))
     return L
 
 def getDist(row, col, endRow, endCol):
@@ -40,7 +41,6 @@ def getDist(row, col, endRow, endCol):
 
 def dijkstra(app):
     startRow, startCol = app.rowAI, app.colAI
-    # print(startRow, startCol)
     endRow, endCol = getPlayerCell(app)
     h = getDist(startRow, startCol, endRow, endCol)
     path = []
@@ -59,8 +59,5 @@ def dijkstra(app):
         unvisited = []
         if (currRow, currCol) != (endRow, endCol):
             unvisited = surroundingCells(app, unvisited, currRow, currCol, visited)
-            # if set(unvisited).intersection(path):
-            #     path.pop()
-            #     currRow, currCol = path[-1]
 # write simple algorithim to just choose any direction to move
     return path
