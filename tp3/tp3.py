@@ -172,7 +172,6 @@ def appStarted(app):
     # Map generation
     app.map = []
     createMap(app)
-    print2dList(app.map)
     app.edgeCoords = set()  #Coordinates of player border
     app.wallCoords = set()  #Coordinates of level borders
     app.wallDirs = {'up' : [], 'left' : [], 'right' : [], 'down' : []}   #Directions for each of the coordinates
@@ -194,8 +193,6 @@ def appStarted(app):
     app.input = ''
     print('Please be sure to turn off Caps lock!!!')
 
-def gameMode_mousePressed(app, event):
-    print(event.x, event.y)
 
 def gameMode_keyPressed(app, event):
     app.input = event.key
@@ -297,7 +294,6 @@ def gameMode_timerFired(app):
         app.impacty = impactSet[0][1]
         app.mode = 'gameOver'
         app.impactAngle = app.angle
-        print(app.impactAngle)
 
 
 def drawPlayer(app, canvas):
@@ -355,8 +351,6 @@ def gameMode_redrawAll(app, canvas):
 # Game Over Mode
 ##########################################
 
-def gameOver_mousePressed(app, event):
-    print(event.x, event.y)
 
 def gameOver_keyPressed(app, event):
     if event.key == 'u':

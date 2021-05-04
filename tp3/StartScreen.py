@@ -96,5 +96,7 @@ def startScreen_redrawAll(app, canvas):
     canvas.create_rectangle(0,0, app.width, app.height, fill = 'grey')
     canvas.create_text(app.width/2, 150, font = 'Comic 75',
                         text = '🚀No Brakes!🚀', fill = 'snow')
+    canvas.create_text(app.width/2, 225, font = 'Comic 25',
+                        text = 'Turn off caps lock (งಠ_ ಠ)ง', fill = 'snow')
     drawStartButtons(app, canvas)
     drawStartPlayers(app, canvas)
