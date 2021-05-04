@@ -3,6 +3,7 @@ from PlayerSelection import *
 from MazeGenerator import *
 from DijkstraSearch import *
 from StartScreen import *
+from leaderboard import *
 import math, time, random, os
 
 ######################################################################
@@ -191,7 +192,7 @@ def appStarted(app):
     app.timeElapsed = 0
     app.mode = 'startScreen'
     app.input = ''
-    print('Please be sure to turn off Caps lock!!!')
+    app.name = ''
 
 
 def gameMode_keyPressed(app, event):
@@ -351,10 +352,23 @@ def gameMode_redrawAll(app, canvas):
 # Game Over Mode
 ##########################################
 
+def storeScore(app):
+    leaderboardData = open("leaderboardData.txt", 'a')
+    playerData = str(app.name + ',' + str(int(app.maxSpeed)) + ',')
+    leaderboardData.write(playerData)
+    leaderboardData.close()
 
 def gameOver_keyPressed(app, event):
-    if event.key == 'u':
+    if event.key == 'Escape':
         appStarted(app)
+    if event.key == 'Enter' and 0 < len(app.name) < 4:
+        storeScore(app)
+        app.mode = 'leaderboard'
+    inputKey = event.key.upper()
+    if len(inputKey) == 1 and len(app.name) < 3:
+        app.name += inputKey
+    if event.key == 'Backspace' and len(app.name) > 0:
+        app.name = app.name[:-1]
 
 def angleChange(app, steps, angle):
     if app.shape == 'circle':
@@ -438,13 +452,30 @@ def gameOver_timerFired(app):
         collide(app)    
     updateEdge(app)
 
+def drawNameBox(app, canvas):
+    x1, y1 = app.width/2 - 200, app.height/2 - 100
+    x2, y2 = app.width/2 + 200, app.height/2 + 100
+    canvas.create_rectangle(x1, y1, x2, y2, fill = 'white', width = 3)
+    canvas.create_text(app.width/2, app.height/2, text = app.name,
+                    font = 'Arial 50 bold')
+
+def drawMessages(app, canvas):
+    speed = int(app.maxSpeed)
+    canvas.create_text(app.width/2, 25,
+                text=(f'Game over! Top speed: {speed}mph'),
+                font = 'Arial 20 bold', fill = 'white')
+    canvas.create_text(app.width/2, 50,
+                text = 'Please type your name to store your score',
+                font = 'Arial 20 bold', fill = 'white')
+    canvas.create_text(app.width/2, 75,
+                text = 'or press escape to restart',
+                font = 'Arial 20 bold', fill = 'white')
+
 def gameOver_redrawAll(app, canvas):
     drawMaze(app, canvas)
     drawPlayer(app, canvas)
-    canvas.create_text(app.width/2, 50,
-                text=(f'Game over! Top speed: {str(int(app.maxSpeed))}mph'),
-                font = 'Arial 20 bold', fill = 'white')
-    
+    drawMessages(app, canvas)
+    drawNameBox(app, canvas)
 
 def quit_timerFired(app):
     os._exit(0)
