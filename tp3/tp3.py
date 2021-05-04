@@ -483,6 +483,7 @@ def gameOver_redrawAll(app, canvas):
 
 def leaderboard_keyPressed(app, event):
     if event.key == 'Escape':
+        appStarted(app)
         app.mode = 'startScreen'
 
 def drawNames(app, canvas):
