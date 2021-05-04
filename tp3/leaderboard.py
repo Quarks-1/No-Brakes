@@ -22,9 +22,8 @@ def drawNames(app, canvas):
             currNum = listedData[spot+1]
             currName = listedData[spot]
             currNum = int(currNum)
-            print(currNum == int)
             if currNum > bestScore and currName not in sortedData:
-                bestScore = listedData[spot+1]
+                bestScore = currNum
                 bestName = listedData[spot]
         sortedData.append(bestName)
         sortedData.append(bestScore)
