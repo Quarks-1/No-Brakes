@@ -44,7 +44,7 @@ def playerSelect_mousePressed(app, event):
         app.selected = 'rectangle'
         app.b1Color = 'red'
         app.b2Color = 'darkGreen'
-    if x5 < event.x < x6 and y5 < event.y < y6: #Continue button
+    if x5 < event.x < x6 and y5 < event.y < y6 and app.selected != '': #Continue button
         app.mode = 'gameMode'
     if x7 < event.x < x8 and y7 < event.y < y8: #AI mode button
         app.enemyAI = not app.enemyAI
