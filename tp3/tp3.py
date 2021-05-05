@@ -3,7 +3,6 @@ from PlayerSelection import *
 from MazeGenerator import *
 from DijkstraSearch import *
 from StartScreen import *
-# from leaderboard import *
 import math, time, random, os, copy
 
 ######################################################################
